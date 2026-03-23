@@ -56,6 +56,3 @@ AnimatedItemDefaults.none()
 - **`animatedlist`** — library
 - **`sample`** — playground (transition tuning, tag chips, list demos)
 
-## License
-
-See repository license (if any).
