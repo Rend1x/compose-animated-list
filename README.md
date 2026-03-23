@@ -1,4 +1,4 @@
-# composeanimatedlist
+# compose-animated-list
 
 Diff-driven animated column for Jetpack Compose: each item exposes a **lifecycle** (`phase` + `progress`) so you can build custom transitions without guessing enter/exit flags.
 
