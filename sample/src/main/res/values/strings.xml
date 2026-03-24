@@ -1,11 +1,57 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Animated list sample</string>
-    <string name="screen_heading">AnimatedColumn</string>
+    <string name="screen_heading">AnimatedColumn playground</string>
     <string name="action_add">Add</string>
-    <string name="action_remove">Remove</string>
+    <string name="action_remove_last">Remove last</string>
     <string name="item_title">Item %1$d</string>
     <string name="status_entering">Entering</string>
     <string name="status_exiting">Exiting</string>
     <string name="status_idle">Idle</string>
+
+    <string name="animating_true">List animations running…</string>
+    <string name="animating_false">No list animations</string>
+
+    <string name="section_presets">Presets (AnimatedListTransition)</string>
+    <string name="preset_default">Default (fade + slide)</string>
+    <string name="preset_fade">Fade</string>
+    <string name="preset_slide_vertical">Slide vertical</string>
+    <string name="preset_none">None (instant)</string>
+
+    <string name="section_enter">Enter behavior</string>
+    <string name="enter_none">None</string>
+    <string name="enter_fade">Fade</string>
+    <string name="enter_slide_vertical">Slide from below</string>
+    <string name="enter_fade_and_slide">Fade + slide</string>
+    <string name="duration_enter_ms">Enter duration (ms)</string>
+    <string name="offset_enter_dp">Enter slide offset (dp)</string>
+
+    <string name="section_exit">Exit behavior</string>
+    <string name="exit_none">None</string>
+    <string name="exit_fade">Fade</string>
+    <string name="exit_slide_vertical">Slide (keep opacity)</string>
+    <string name="exit_fade_and_slide">Fade + slide</string>
+    <string name="duration_exit_ms">Exit duration (ms)</string>
+    <string name="offset_exit_dp">Exit slide offset (dp)</string>
+    <string name="exit_direction">Exit slide direction</string>
+    <string name="direction_up">Up</string>
+    <string name="direction_down">Down</string>
+
+    <string name="section_placement">Placement (height collapse)</string>
+    <string name="placement_none">None</string>
+    <string name="placement_animated">Animated</string>
+    <string name="duration_placement_ms">Placement duration (ms)</string>
+
+    <string name="section_list_layout">Horizontal alignment</string>
+    <string name="align_center">Center</string>
+    <string name="align_start">Start</string>
+
+    <string name="section_remove">Remove from list</string>
+    <string name="remove_hint">Try different positions to see enter/exit and reflow.</string>
+    <string name="remove_first">Remove first</string>
+    <string name="remove_random">Remove random</string>
+    <string name="remove_second">Remove 2nd</string>
+    <string name="clear_exiting_now">Clear exiting now</string>
+
+    <string name="section_list">List</string>
 </resources>
