@@ -1,4 +1,4 @@
-package com.rend1x.composeanimatedlist
+package com.rend1x.composeanimatedlist.animation
 
 import androidx.compose.runtime.Immutable
 

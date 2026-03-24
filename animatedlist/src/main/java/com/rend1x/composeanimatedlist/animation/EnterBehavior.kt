@@ -1,4 +1,4 @@
-package com.rend1x.composeanimatedlist
+package com.rend1x.composeanimatedlist.animation
 
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp

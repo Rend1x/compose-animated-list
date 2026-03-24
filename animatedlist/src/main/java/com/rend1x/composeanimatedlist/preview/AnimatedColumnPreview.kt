@@ -1,4 +1,4 @@
-package com.rend1x.composeanimatedlist
+package com.rend1x.composeanimatedlist.preview
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -22,6 +22,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.rend1x.composeanimatedlist.AnimatedColumn
+import com.rend1x.composeanimatedlist.animation.AnimatedListTransition
 
 @Preview(
     name = "AnimatedColumn Demo",

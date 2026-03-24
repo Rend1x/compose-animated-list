@@ -1,4 +1,4 @@
-package com.rend1x.composeanimatedlist
+package com.rend1x.composeanimatedlist.animation
 
 sealed interface PlacementBehavior {
     data object None : PlacementBehavior

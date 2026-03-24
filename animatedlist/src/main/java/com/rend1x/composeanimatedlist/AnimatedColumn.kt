@@ -17,18 +17,19 @@ import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.rend1x.composeanimatedlist.animation.AnimatedListTransition
+import com.rend1x.composeanimatedlist.animation.EnterBehavior
+import com.rend1x.composeanimatedlist.animation.ExitBehavior
+import com.rend1x.composeanimatedlist.animation.PlacementBehavior
+import com.rend1x.composeanimatedlist.animation.VerticalDirection
+import com.rend1x.composeanimatedlist.state.AnimatedListItem
+import com.rend1x.composeanimatedlist.state.AnimatedListRenderState
+import com.rend1x.composeanimatedlist.state.AnimatedListState
+import com.rend1x.composeanimatedlist.state.PresenceState
+import com.rend1x.composeanimatedlist.state.rememberAnimatedListState
 import kotlin.math.roundToInt
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
-import com.rend1x.composeanimatedlist.AnimatedItemScope
-import com.rend1x.composeanimatedlist.AnimatedItemScopeImpl
-import com.rend1x.composeanimatedlist.AnimatedListItem
-import com.rend1x.composeanimatedlist.AnimatedListTransition
-import com.rend1x.composeanimatedlist.EnterBehavior
-import com.rend1x.composeanimatedlist.ExitBehavior
-import com.rend1x.composeanimatedlist.PlacementBehavior
-import com.rend1x.composeanimatedlist.PresenceState
-import com.rend1x.composeanimatedlist.VerticalDirection
 
 /**
  * MVP composable that animates item enter/exit using internal render list state and diffing.

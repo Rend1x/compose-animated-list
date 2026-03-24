@@ -1,4 +1,4 @@
-package com.rend1x.composeanimatedlist
+package com.rend1x.composeanimatedlist.state
 
 /**
  * Tracks lifecycle of an item inside the internal render list.

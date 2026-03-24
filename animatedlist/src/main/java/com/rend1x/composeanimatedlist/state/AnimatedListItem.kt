@@ -1,4 +1,4 @@
-package com.rend1x.composeanimatedlist
+package com.rend1x.composeanimatedlist.state
 
 /**
  * Item representation stored by AnimatedListState.

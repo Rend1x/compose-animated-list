@@ -31,12 +31,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.rend1x.composeanimatedlist.AnimatedColumn
-import com.rend1x.composeanimatedlist.AnimatedListTransition
-import com.rend1x.composeanimatedlist.EnterBehavior
-import com.rend1x.composeanimatedlist.ExitBehavior
-import com.rend1x.composeanimatedlist.PlacementBehavior
-import com.rend1x.composeanimatedlist.VerticalDirection
-import com.rend1x.composeanimatedlist.rememberAnimatedListState
+import com.rend1x.composeanimatedlist.animation.AnimatedListTransition
+import com.rend1x.composeanimatedlist.animation.EnterBehavior
+import com.rend1x.composeanimatedlist.animation.ExitBehavior
+import com.rend1x.composeanimatedlist.animation.PlacementBehavior
+import com.rend1x.composeanimatedlist.animation.VerticalDirection
+import com.rend1x.composeanimatedlist.state.rememberAnimatedListState
 import kotlin.random.Random
 
 private data class DemoItem(val id: Int)
