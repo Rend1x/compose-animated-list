@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Animated list sample</string>
+    <string name="screen_heading">AnimatedColumn</string>
+    <string name="action_add">Add</string>
+    <string name="action_remove">Remove</string>
+    <string name="item_title">Item %1$d</string>
+    <string name="status_entering">Entering</string>
+    <string name="status_exiting">Exiting</string>
+    <string name="status_idle">Idle</string>
+</resources>
