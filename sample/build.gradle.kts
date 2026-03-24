@@ -5,12 +5,12 @@ plugins {
 }
 
 android {
-    namespace = "rend1x.sample"
+    namespace = "com.rend1x.composeanimatedlist.sample"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "rend1x.sample"
-        minSdk = 28
+        applicationId = "com.rend1x.composeanimatedlist.sample"
+        minSdk = 23
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
@@ -47,7 +47,7 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
-    implementation(libs.androidx.activity.compose)
+    implementation("androidx.activity:activity-compose:1.12.4")
 
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.foundation)

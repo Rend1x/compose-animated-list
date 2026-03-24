@@ -1,4 +1,4 @@
-package ren.pj.animatedlist
+package com.rend1x.composeanimatedlist
 
 enum class VerticalDirection {
     Up,

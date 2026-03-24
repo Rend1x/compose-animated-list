@@ -1,4 +1,4 @@
-package rend1x.sample
+package com.rend1x.composeanimatedlist.sample
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity

@@ -1,15 +1,20 @@
+# Gradle
+.gradle/
+build/
+
+# Android Studio / IntelliJ
+.idea/
 *.iml
-.gradle
-/local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
-.DS_Store
-/build
-/captures
-.externalNativeBuild
-.cxx
+
+# Local machine
 local.properties
+
+# Logs
+*.log
+
+# Kotlin (incremental caches in newer toolchains)
+.kotlin/
+
+# Keys
+*.jks
+*.keystore

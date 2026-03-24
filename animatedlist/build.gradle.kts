@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "ren.pj.animatedlist"
+    namespace = "com.rend1x.composeanimatedlist"
     compileSdk = 36
 
     defaultConfig {
-        minSdk = 28
+        minSdk = 21
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")

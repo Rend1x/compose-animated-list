@@ -1,4 +1,4 @@
-package ren.pj.animatedlist
+package com.rend1x.composeanimatedlist
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
@@ -20,9 +20,15 @@ import androidx.compose.ui.unit.dp
 import kotlin.math.roundToInt
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
-import rend1x.animatedlist.AnimatedListRenderState
-import rend1x.animatedlist.AnimatedListState
-import rend1x.animatedlist.rememberAnimatedListState
+import com.rend1x.composeanimatedlist.AnimatedItemScope
+import com.rend1x.composeanimatedlist.AnimatedItemScopeImpl
+import com.rend1x.composeanimatedlist.AnimatedListItem
+import com.rend1x.composeanimatedlist.AnimatedListTransition
+import com.rend1x.composeanimatedlist.EnterBehavior
+import com.rend1x.composeanimatedlist.ExitBehavior
+import com.rend1x.composeanimatedlist.PlacementBehavior
+import com.rend1x.composeanimatedlist.PresenceState
+import com.rend1x.composeanimatedlist.VerticalDirection
 
 /**
  * MVP composable that animates item enter/exit using internal render list state and diffing.
@@ -34,7 +40,7 @@ fun <T> AnimatedColumn(
     key: (T) -> Any,
     modifier: Modifier = Modifier,
     state: AnimatedListState = rememberAnimatedListState(),
-    transition: AnimatedListTransition = AnimatedListTransition.Default,
+    transition: AnimatedListTransition = AnimatedListTransition.Companion.Default,
     horizontalAlignment: Alignment.Horizontal = Alignment.Start,
     content: @Composable AnimatedItemScope.(T) -> Unit,
 ) {

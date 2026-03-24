@@ -1,4 +1,4 @@
-package rend1x.sample
+package com.rend1x.composeanimatedlist.sample
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -23,8 +23,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import rend1x.sample.R
-import ren.pj.animatedlist.AnimatedColumn
+import com.rend1x.composeanimatedlist.AnimatedColumn
 
 private data class DemoItem(val id: Int)
 

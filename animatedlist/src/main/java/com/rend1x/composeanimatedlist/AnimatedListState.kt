@@ -1,4 +1,4 @@
-package rend1x.animatedlist
+package com.rend1x.composeanimatedlist
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -7,9 +7,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.Stable
-import ren.pj.animatedlist.AnimatedListDiffer
-import ren.pj.animatedlist.AnimatedListItem
-import ren.pj.animatedlist.PresenceState
+import com.rend1x.composeanimatedlist.AnimatedListDiffer
+import com.rend1x.composeanimatedlist.AnimatedListItem
+import com.rend1x.composeanimatedlist.PresenceState
 
 /**
  * Public controller for AnimatedColumn.

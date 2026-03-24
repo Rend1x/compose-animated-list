@@ -1,4 +1,4 @@
-package ren.pj.animatedlist
+package com.rend1x.composeanimatedlist
 
 /**
  * Tracks lifecycle of an item inside the internal render list.
