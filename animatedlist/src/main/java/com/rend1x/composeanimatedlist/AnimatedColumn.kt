@@ -15,11 +15,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.rend1x.composeanimatedlist.animation.AnimatedListTransition
-import com.rend1x.composeanimatedlist.animation.EnterBehavior
-import com.rend1x.composeanimatedlist.animation.ExitBehavior
+import com.rend1x.composeanimatedlist.animation.AnimatedItemDefaults
+import com.rend1x.composeanimatedlist.animation.AnimatedItemTransitionSpec
+import com.rend1x.composeanimatedlist.animation.EnterSpec
+import com.rend1x.composeanimatedlist.animation.ExitSpec
 import com.rend1x.composeanimatedlist.animation.PlacementBehavior
 import com.rend1x.composeanimatedlist.animation.VerticalDirection
 import com.rend1x.composeanimatedlist.state.AnimatedListItem
@@ -27,13 +29,17 @@ import com.rend1x.composeanimatedlist.state.AnimatedListRenderState
 import com.rend1x.composeanimatedlist.state.AnimatedListState
 import com.rend1x.composeanimatedlist.state.PresenceState
 import com.rend1x.composeanimatedlist.state.rememberAnimatedListState
+import kotlin.math.abs
+import kotlin.math.min
 import kotlin.math.roundToInt
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 
+private const val PresentSettleDurationMillis = 120
+private const val ProgressEpsilon = 1e-4f
+
 /**
- * MVP composable that animates item enter/exit using internal render list state and diffing.
- * LazyColumn support is intentionally out of scope for now.
+ * Column-based list with diff-driven enter/exit animations and per-item lifecycle ([AnimatedItemScope]).
  */
 @Composable
 fun <T> AnimatedColumn(
@@ -41,7 +47,7 @@ fun <T> AnimatedColumn(
     key: (T) -> Any,
     modifier: Modifier = Modifier,
     state: AnimatedListState = rememberAnimatedListState(),
-    transition: AnimatedListTransition = AnimatedListTransition.Companion.Default,
+    transitionSpec: AnimatedItemTransitionSpec = AnimatedItemDefaults.fadeSlide(),
     horizontalAlignment: Alignment.Horizontal = Alignment.Start,
     content: @Composable AnimatedItemScope.(T) -> Unit,
 ) {
@@ -71,16 +77,10 @@ fun <T> AnimatedColumn(
                 AnimatedColumnItem(
                     item = renderItem,
                     listState = state,
-                    placement = transition.placement,
-                    transition = transition,
+                    transitionSpec = transitionSpec,
                     onExitFinished = { renderState.onExitAnimationFinished(renderItem.key) },
-                ) {
-                    val scope = AnimatedItemScopeImpl(
-                        isEntering = renderItem.presence == PresenceState.Entering,
-                        isExiting = renderItem.presence == PresenceState.Exiting,
-                    )
-                    scope.content(renderItem.value)
-                }
+                    content = content,
+                )
             }
         }
     }
@@ -90,24 +90,24 @@ fun <T> AnimatedColumn(
 private fun <T> ColumnScope.AnimatedColumnItem(
     item: AnimatedListItem<T>,
     listState: AnimatedListState,
-    placement: PlacementBehavior,
-    transition: AnimatedListTransition,
+    transitionSpec: AnimatedItemTransitionSpec,
     onExitFinished: () -> Unit,
-    content: @Composable () -> Unit,
+    content: @Composable AnimatedItemScope.(T) -> Unit,
 ) {
     val density = LocalDensity.current
     val currentOnExitFinished by rememberUpdatedState(onExitFinished)
+    val placement = transitionSpec.placement
 
     val initialAlpha = remember(item.key) {
         when (item.presence) {
-            PresenceState.Entering -> transition.enter.initialAlpha
+            PresenceState.Entering -> transitionSpec.enter.initialAlpha
             PresenceState.Present -> 1f
             PresenceState.Exiting -> 1f
         }
     }
     val initialOffsetPx = remember(item.key) {
         when (item.presence) {
-            PresenceState.Entering -> with(density) { transition.enter.initialOffsetDp.toPx() }
+            PresenceState.Entering -> with(density) { transitionSpec.enter.initialOffsetDp.toPx() }
             PresenceState.Present -> 0f
             PresenceState.Exiting -> 0f
         }
@@ -123,92 +123,34 @@ private fun <T> ColumnScope.AnimatedColumnItem(
     }
     val sizeProgress = remember(item.key) { Animatable(initialSizeProgress) }
 
-    LaunchedEffect(item.presence, transition.enter, transition.exit, placement) {
+    LaunchedEffect(item.presence, transitionSpec.enter, transitionSpec.exit, placement) {
         listState.onAnimationStarted()
         try {
             when (item.presence) {
-                PresenceState.Entering -> {
-                    alpha.snapTo(transition.enter.initialAlpha)
-                    translationY.snapTo(with(density) { transition.enter.initialOffsetDp.toPx() })
-                    if (placement is PlacementBehavior.Animated) {
-                        sizeProgress.snapTo(0f)
-                    } else {
-                        sizeProgress.snapTo(1f)
-                    }
-                    coroutineScope {
-                        launch {
-                            alpha.animateTo(
-                                targetValue = 1f,
-                                animationSpec = tween(durationMillis = transition.enter.durationMillis),
-                            )
-                        }
-                        launch {
-                            translationY.animateTo(
-                                targetValue = 0f,
-                                animationSpec = tween(durationMillis = transition.enter.durationMillis),
-                            )
-                        }
-                        launch {
-                            if (placement is PlacementBehavior.Animated) {
-                                sizeProgress.animateTo(
-                                    targetValue = 1f,
-                                    animationSpec = tween(durationMillis = placement.durationMillis),
-                                )
-                            } else {
-                                sizeProgress.snapTo(1f)
-                            }
-                        }
-                    }
-                }
+                PresenceState.Entering -> animateEnter(
+                    density = density,
+                    alpha = alpha,
+                    translationY = translationY,
+                    sizeProgress = sizeProgress,
+                    enter = transitionSpec.enter,
+                    placement = placement,
+                )
 
-                PresenceState.Present -> {
-                    coroutineScope {
-                        launch {
-                            alpha.animateTo(
-                                targetValue = 1f,
-                                animationSpec = tween(durationMillis = 120),
-                            )
-                        }
-                        launch {
-                            translationY.animateTo(
-                                targetValue = 0f,
-                                animationSpec = tween(durationMillis = 120),
-                            )
-                        }
-                        launch {
-                            sizeProgress.animateTo(
-                                targetValue = 1f,
-                                animationSpec = tween(durationMillis = 120),
-                            )
-                        }
-                    }
-                }
+                PresenceState.Present -> animatePresentSettle(
+                    alpha = alpha,
+                    translationY = translationY,
+                    sizeProgress = sizeProgress,
+                )
 
                 PresenceState.Exiting -> {
-                    coroutineScope {
-                        launch {
-                            alpha.animateTo(
-                                targetValue = transition.exit.targetAlpha,
-                                animationSpec = tween(durationMillis = transition.exit.durationMillis),
-                            )
-                        }
-                        launch {
-                            translationY.animateTo(
-                                targetValue = with(density) { transition.exit.targetOffsetDp.toPx() },
-                                animationSpec = tween(durationMillis = transition.exit.durationMillis),
-                            )
-                        }
-                        launch {
-                            if (placement is PlacementBehavior.Animated) {
-                                sizeProgress.animateTo(
-                                    targetValue = 0f,
-                                    animationSpec = tween(durationMillis = placement.durationMillis),
-                                )
-                            } else {
-                                sizeProgress.snapTo(0f)
-                            }
-                        }
-                    }
+                    animateExit(
+                        density = density,
+                        alpha = alpha,
+                        translationY = translationY,
+                        sizeProgress = sizeProgress,
+                        exit = transitionSpec.exit,
+                        placement = placement,
+                    )
                     currentOnExitFinished()
                 }
             }
@@ -233,53 +175,282 @@ private fun <T> ColumnScope.AnimatedColumnItem(
                 clip = true
             },
     ) {
-        content()
+        val enterOffsetPx = with(density) { transitionSpec.enter.initialOffsetDp.toPx() }
+        val exitOffsetPx = with(density) { transitionSpec.exit.targetOffsetDp.toPx() }
+        val placementAnimated = transitionSpec.placement is PlacementBehavior.Animated
+        val progress = itemLifecycleProgress(
+            presence = item.presence,
+            enter = transitionSpec.enter,
+            exit = transitionSpec.exit,
+            alpha = alpha.value,
+            translationY = translationY.value,
+            initialEnterOffsetPx = enterOffsetPx,
+            exitTargetOffsetPx = exitOffsetPx,
+            sizeProgress = sizeProgress.value,
+            placementAnimated = placementAnimated,
+        )
+        val scope = AnimatedItemScopeImpl(
+            phase = item.presence.toItemPhase(),
+            progress = progress,
+        )
+        scope.content(item.value)
     }
 }
 
-private val EnterBehavior.initialAlpha: Float
+private suspend fun animateEnter(
+    density: Density,
+    alpha: Animatable<Float, *>,
+    translationY: Animatable<Float, *>,
+    sizeProgress: Animatable<Float, *>,
+    enter: EnterSpec,
+    placement: PlacementBehavior,
+) {
+    alpha.snapTo(enter.initialAlpha)
+    translationY.snapTo(with(density) { enter.initialOffsetDp.toPx() })
+    if (placement is PlacementBehavior.Animated) {
+        sizeProgress.snapTo(0f)
+    } else {
+        sizeProgress.snapTo(1f)
+    }
+    coroutineScope {
+        launch {
+            alpha.animateTo(
+                targetValue = 1f,
+                animationSpec = tween(durationMillis = enter.durationMillis),
+            )
+        }
+        launch {
+            translationY.animateTo(
+                targetValue = 0f,
+                animationSpec = tween(durationMillis = enter.durationMillis),
+            )
+        }
+        launch {
+            if (placement is PlacementBehavior.Animated) {
+                sizeProgress.animateTo(
+                    targetValue = 1f,
+                    animationSpec = tween(durationMillis = placement.durationMillis),
+                )
+            } else {
+                sizeProgress.snapTo(1f)
+            }
+        }
+    }
+}
+
+private suspend fun animatePresentSettle(
+    alpha: Animatable<Float, *>,
+    translationY: Animatable<Float, *>,
+    sizeProgress: Animatable<Float, *>,
+) {
+    coroutineScope {
+        launch {
+            alpha.animateTo(
+                targetValue = 1f,
+                animationSpec = tween(durationMillis = PresentSettleDurationMillis),
+            )
+        }
+        launch {
+            translationY.animateTo(
+                targetValue = 0f,
+                animationSpec = tween(durationMillis = PresentSettleDurationMillis),
+            )
+        }
+        launch {
+            sizeProgress.animateTo(
+                targetValue = 1f,
+                animationSpec = tween(durationMillis = PresentSettleDurationMillis),
+            )
+        }
+    }
+}
+
+private suspend fun animateExit(
+    density: Density,
+    alpha: Animatable<Float, *>,
+    translationY: Animatable<Float, *>,
+    sizeProgress: Animatable<Float, *>,
+    exit: ExitSpec,
+    placement: PlacementBehavior,
+) {
+    coroutineScope {
+        launch {
+            alpha.animateTo(
+                targetValue = exit.targetAlpha,
+                animationSpec = tween(durationMillis = exit.durationMillis),
+            )
+        }
+        launch {
+            translationY.animateTo(
+                targetValue = with(density) { exit.targetOffsetDp.toPx() },
+                animationSpec = tween(durationMillis = exit.durationMillis),
+            )
+        }
+        launch {
+            if (placement is PlacementBehavior.Animated) {
+                sizeProgress.animateTo(
+                    targetValue = 0f,
+                    animationSpec = tween(durationMillis = placement.durationMillis),
+                )
+            } else {
+                sizeProgress.snapTo(0f)
+            }
+        }
+    }
+}
+
+private fun PresenceState.toItemPhase(): ItemPhase = when (this) {
+    PresenceState.Entering -> ItemPhase.Entering
+    PresenceState.Present -> ItemPhase.Visible
+    PresenceState.Exiting -> ItemPhase.Exiting
+}
+
+private fun itemLifecycleProgress(
+    presence: PresenceState,
+    enter: EnterSpec,
+    exit: ExitSpec,
+    alpha: Float,
+    translationY: Float,
+    initialEnterOffsetPx: Float,
+    exitTargetOffsetPx: Float,
+    sizeProgress: Float,
+    placementAnimated: Boolean,
+): Float {
+    return when (presence) {
+        PresenceState.Present -> 1f
+        PresenceState.Entering -> enteringCompositeProgress(
+            enter = enter,
+            alpha = alpha,
+            translationY = translationY,
+            initialEnterOffsetPx = initialEnterOffsetPx,
+            sizeProgress = sizeProgress,
+            placementAnimated = placementAnimated,
+        ).coerceIn(0f, 1f)
+
+        PresenceState.Exiting -> exitingCompositeProgress(
+            exit = exit,
+            alpha = alpha,
+            translationY = translationY,
+            exitTargetOffsetPx = exitTargetOffsetPx,
+            sizeProgress = sizeProgress,
+            placementAnimated = placementAnimated,
+        ).coerceIn(0f, 1f)
+    }
+}
+
+private fun enteringCompositeProgress(
+    enter: EnterSpec,
+    alpha: Float,
+    translationY: Float,
+    initialEnterOffsetPx: Float,
+    sizeProgress: Float,
+    placementAnimated: Boolean,
+): Float {
+    val fadeP = when (enter) {
+        EnterSpec.None, is EnterSpec.SlideVertical -> 1f
+        is EnterSpec.Fade, is EnterSpec.FadeAndSlide -> alpha
+    }
+    val slideP = when (enter) {
+        is EnterSpec.SlideVertical, is EnterSpec.FadeAndSlide -> {
+            slideProgressFromTranslation(
+                translationY = translationY,
+                referenceOffsetPx = initialEnterOffsetPx,
+            )
+        }
+        else -> 1f
+    }
+    val sizeP = if (placementAnimated) sizeProgress else 1f
+    return minOf(fadeP, slideP, sizeP)
+}
+
+private fun exitingCompositeProgress(
+    exit: ExitSpec,
+    alpha: Float,
+    translationY: Float,
+    exitTargetOffsetPx: Float,
+    sizeProgress: Float,
+    placementAnimated: Boolean,
+): Float {
+    val fadeP = when (exit) {
+        is ExitSpec.SlideVertical -> 1f
+        ExitSpec.None, is ExitSpec.Fade, is ExitSpec.FadeAndSlide -> alpha
+    }
+    val slideP = when (exit) {
+        is ExitSpec.SlideVertical, is ExitSpec.FadeAndSlide -> {
+            slideProgressTowardTarget(
+                translationY = translationY,
+                targetOffsetPx = exitTargetOffsetPx,
+            )
+        }
+        else -> 1f
+    }
+    val sizeP = if (placementAnimated) sizeProgress else 1f
+    return minOf(fadeP, slideP, sizeP)
+}
+
+/** Enter: from [initialEnterOffsetPx] toward 0. */
+private fun slideProgressFromTranslation(
+    translationY: Float,
+    referenceOffsetPx: Float,
+): Float {
+    val denom = abs(referenceOffsetPx)
+    if (denom < ProgressEpsilon) return 1f
+    return (1f - abs(translationY) / denom).coerceIn(0f, 1f)
+}
+
+/** Exit: from 0 toward [targetOffsetPx]. */
+private fun slideProgressTowardTarget(
+    translationY: Float,
+    targetOffsetPx: Float,
+): Float {
+    val denom = abs(targetOffsetPx)
+    if (denom < ProgressEpsilon) return 1f
+    return (1f - abs(translationY) / denom).coerceIn(0f, 1f)
+}
+
+private val EnterSpec.initialAlpha: Float
     get() = when (this) {
-        EnterBehavior.None -> 1f
-        is EnterBehavior.Fade -> 0f
-        is EnterBehavior.SlideVertical -> 1f
-        is EnterBehavior.FadeAndSlide -> 0f
+        EnterSpec.None -> 1f
+        is EnterSpec.Fade -> 0f
+        is EnterSpec.SlideVertical -> 1f
+        is EnterSpec.FadeAndSlide -> 0f
     }
 
-private val EnterBehavior.initialOffsetDp: Dp
+private val EnterSpec.initialOffsetDp: Dp
     get() = when (this) {
-        EnterBehavior.None -> 0.dp
-        is EnterBehavior.Fade -> 0.dp
-        is EnterBehavior.SlideVertical -> offset
-        is EnterBehavior.FadeAndSlide -> offset
+        EnterSpec.None -> 0.dp
+        is EnterSpec.Fade -> 0.dp
+        is EnterSpec.SlideVertical -> offset
+        is EnterSpec.FadeAndSlide -> offset
     }
 
-private val EnterBehavior.durationMillis: Int
+private val EnterSpec.durationMillis: Int
     get() = when (this) {
-        EnterBehavior.None -> 0
-        is EnterBehavior.Fade -> durationMillis
-        is EnterBehavior.SlideVertical -> durationMillis
-        is EnterBehavior.FadeAndSlide -> durationMillis
+        EnterSpec.None -> 0
+        is EnterSpec.Fade -> durationMillis
+        is EnterSpec.SlideVertical -> durationMillis
+        is EnterSpec.FadeAndSlide -> durationMillis
     }
 
-private val ExitBehavior.targetAlpha: Float
+private val ExitSpec.targetAlpha: Float
     get() = when (this) {
-        ExitBehavior.None -> 0f
-        is ExitBehavior.Fade -> 0f
-        is ExitBehavior.SlideVertical -> 1f
-        is ExitBehavior.FadeAndSlide -> 0f
+        ExitSpec.None -> 0f
+        is ExitSpec.Fade -> 0f
+        is ExitSpec.SlideVertical -> 1f
+        is ExitSpec.FadeAndSlide -> 0f
     }
 
-private val ExitBehavior.targetOffsetDp: Dp
+private val ExitSpec.targetOffsetDp: Dp
     get() = when (this) {
-        ExitBehavior.None -> 0.dp
-        is ExitBehavior.Fade -> 0.dp
-        is ExitBehavior.SlideVertical -> {
+        ExitSpec.None -> 0.dp
+        is ExitSpec.Fade -> 0.dp
+        is ExitSpec.SlideVertical -> {
             when (direction) {
                 VerticalDirection.Up -> -offset
                 VerticalDirection.Down -> offset
             }
         }
-        is ExitBehavior.FadeAndSlide -> {
+        is ExitSpec.FadeAndSlide -> {
             when (direction) {
                 VerticalDirection.Up -> -offset
                 VerticalDirection.Down -> offset
@@ -287,10 +458,10 @@ private val ExitBehavior.targetOffsetDp: Dp
         }
     }
 
-private val ExitBehavior.durationMillis: Int
+private val ExitSpec.durationMillis: Int
     get() = when (this) {
-        ExitBehavior.None -> 0
-        is ExitBehavior.Fade -> durationMillis
-        is ExitBehavior.SlideVertical -> durationMillis
-        is ExitBehavior.FadeAndSlide -> durationMillis
+        ExitSpec.None -> 0
+        is ExitSpec.Fade -> durationMillis
+        is ExitSpec.SlideVertical -> durationMillis
+        is ExitSpec.FadeAndSlide -> durationMillis
     }

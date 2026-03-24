@@ -22,7 +22,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.rend1x.composeanimatedlist.AnimatedColumn
-import com.rend1x.composeanimatedlist.animation.AnimatedListTransition
+import com.rend1x.composeanimatedlist.animation.AnimatedItemDefaults
 
 @Preview(
     name = "AnimatedColumn Demo",
@@ -104,7 +104,7 @@ private fun AnimatedColumnPreviewScreen() {
         AnimatedColumn(
             items = items,
             key = { it.id },
-            transition = AnimatedListTransition.Fade,
+            transitionSpec = AnimatedItemDefaults.fade(),
             modifier = Modifier.fillMaxWidth(),
         ) { item ->
             DemoItemCard(item = item)

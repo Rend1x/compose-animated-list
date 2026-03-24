@@ -1,6 +1,7 @@
 package com.rend1x.composeanimatedlist.sample
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -18,6 +19,7 @@ import androidx.compose.material.Divider
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.RadioButton
 import androidx.compose.material.Slider
+import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -28,18 +30,23 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.rend1x.composeanimatedlist.AnimatedColumn
-import com.rend1x.composeanimatedlist.animation.AnimatedListTransition
-import com.rend1x.composeanimatedlist.animation.EnterBehavior
-import com.rend1x.composeanimatedlist.animation.ExitBehavior
+import com.rend1x.composeanimatedlist.ItemPhase
+import com.rend1x.composeanimatedlist.animation.AnimatedItemTransitionSpec
+import com.rend1x.composeanimatedlist.animation.AnimatedItemDefaults
+import com.rend1x.composeanimatedlist.animation.EnterSpec
+import com.rend1x.composeanimatedlist.animation.ExitSpec
 import com.rend1x.composeanimatedlist.animation.PlacementBehavior
 import com.rend1x.composeanimatedlist.animation.VerticalDirection
 import com.rend1x.composeanimatedlist.state.rememberAnimatedListState
 import kotlin.random.Random
 
 private data class DemoItem(val id: Int)
+
+private data class TagChip(val id: Int, val label: String)
 
 private enum class EnterKind { None, Fade, SlideVertical, FadeAndSlide }
 
@@ -58,6 +65,18 @@ fun SampleListScreen() {
 
     val listState = rememberAnimatedListState()
 
+    val activeTags = remember {
+        mutableStateListOf(
+            TagChip(1, "Compose"),
+            TagChip(2, "Animation"),
+            TagChip(3, "Lists"),
+        )
+    }
+    var nextTagId by remember { mutableIntStateOf(4) }
+    val tagPool = remember {
+        listOf("Kotlin", "Diff", "UI", "Motion", "Samples")
+    }
+
     var enterKind by remember { mutableStateOf(EnterKind.FadeAndSlide) }
     var enterDuration by remember { mutableIntStateOf(240) }
     var enterOffsetDp by remember { mutableIntStateOf(16) }
@@ -72,7 +91,7 @@ fun SampleListScreen() {
 
     var horizontalCentered by remember { mutableStateOf(true) }
 
-    val transition = remember(
+    val transitionSpec = remember(
         enterKind,
         enterDuration,
         enterOffsetDp,
@@ -84,21 +103,21 @@ fun SampleListScreen() {
         placementDuration,
     ) {
         val enter = when (enterKind) {
-            EnterKind.None -> EnterBehavior.None
-            EnterKind.Fade -> EnterBehavior.Fade(enterDuration)
-            EnterKind.SlideVertical -> EnterBehavior.SlideVertical(enterOffsetDp.dp, enterDuration)
-            EnterKind.FadeAndSlide -> EnterBehavior.FadeAndSlide(enterOffsetDp.dp, enterDuration)
+            EnterKind.None -> EnterSpec.None
+            EnterKind.Fade -> EnterSpec.Fade(enterDuration)
+            EnterKind.SlideVertical -> EnterSpec.SlideVertical(enterOffsetDp.dp, enterDuration)
+            EnterKind.FadeAndSlide -> EnterSpec.FadeAndSlide(enterOffsetDp.dp, enterDuration)
         }
         val exit = when (exitKind) {
-            ExitKind.None -> ExitBehavior.None
-            ExitKind.Fade -> ExitBehavior.Fade(exitDuration)
-            ExitKind.SlideVertical -> ExitBehavior.SlideVertical(
+            ExitKind.None -> ExitSpec.None
+            ExitKind.Fade -> ExitSpec.Fade(exitDuration)
+            ExitKind.SlideVertical -> ExitSpec.SlideVertical(
                 exitOffsetDp.dp,
                 exitDirection,
                 exitDuration
             )
 
-            ExitKind.FadeAndSlide -> ExitBehavior.FadeAndSlide(
+            ExitKind.FadeAndSlide -> ExitSpec.FadeAndSlide(
                 exitOffsetDp.dp,
                 exitDirection,
                 exitDuration
@@ -108,7 +127,7 @@ fun SampleListScreen() {
             PlacementKind.None -> PlacementBehavior.None
             PlacementKind.Animated -> PlacementBehavior.Animated(placementDuration)
         }
-        AnimatedListTransition(enter = enter, exit = exit, placement = placement)
+        AnimatedItemTransitionSpec(enter = enter, exit = exit, placement = placement)
     }
 
     val scrollState = rememberScrollState()
@@ -378,6 +397,65 @@ fun SampleListScreen() {
         }
 
         Text(
+            text = stringResource(R.string.section_tags_demo),
+            style = MaterialTheme.typography.subtitle2,
+        )
+        Text(
+            text = stringResource(R.string.tag_remove_hint),
+            style = MaterialTheme.typography.caption,
+            color = MaterialTheme.colors.secondary,
+        )
+        AnimatedColumn(
+            items = activeTags.toList(),
+            key = { it.id },
+            transitionSpec = AnimatedItemDefaults.fadeSlide(),
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = if (horizontalCentered) {
+                Alignment.CenterHorizontally
+            } else {
+                Alignment.Start
+            },
+        ) { tag ->
+            Surface(
+                modifier = Modifier
+                    .padding(vertical = 4.dp)
+                    .clickable {
+                        activeTags.remove(tag)
+                    },
+                shape = RoundedCornerShape(20.dp),
+                color = MaterialTheme.colors.secondary.copy(alpha = 0.25f),
+                elevation = 0.dp,
+            ) {
+                Text(
+                    text = tag.label,
+                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
+                    style = MaterialTheme.typography.body2,
+                )
+            }
+        }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            tagPool.forEach { label ->
+                val already = activeTags.any { it.label == label }
+                Button(
+                    onClick = {
+                        if (!already) {
+                            activeTags.add(TagChip(nextTagId, label))
+                            nextTagId++
+                        }
+                    },
+                    enabled = !already,
+                ) {
+                    Text("+ $label")
+                }
+            }
+        }
+
+        Text(
             text = stringResource(R.string.section_list),
             style = MaterialTheme.typography.subtitle2,
         )
@@ -385,7 +463,7 @@ fun SampleListScreen() {
             items = items.toList(),
             key = { it.id },
             state = listState,
-            transition = transition,
+            transitionSpec = transitionSpec,
             modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = if (horizontalCentered) {
                 Alignment.CenterHorizontally
@@ -396,7 +474,11 @@ fun SampleListScreen() {
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 4.dp),
+                    .padding(vertical = 4.dp)
+                    .graphicsLayer {
+                        scaleX = 0.9f + 0.1f * progress
+                        scaleY = 0.9f + 0.1f * progress
+                    },
                 shape = RoundedCornerShape(12.dp),
                 elevation = 4.dp,
             ) {
@@ -406,10 +488,10 @@ fun SampleListScreen() {
                         style = MaterialTheme.typography.subtitle1,
                     )
                     Text(
-                        text = when {
-                            isEntering -> stringResource(R.string.status_entering)
-                            isExiting -> stringResource(R.string.status_exiting)
-                            else -> stringResource(R.string.status_idle)
+                        text = when (phase) {
+                            ItemPhase.Entering -> stringResource(R.string.status_entering)
+                            ItemPhase.Visible -> stringResource(R.string.status_visible)
+                            ItemPhase.Exiting -> stringResource(R.string.removing_label)
                         },
                         style = MaterialTheme.typography.caption,
                         color = MaterialTheme.colors.primary,
