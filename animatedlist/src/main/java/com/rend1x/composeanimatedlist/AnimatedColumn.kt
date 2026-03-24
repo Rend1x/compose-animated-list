@@ -57,6 +57,8 @@ private const val ProgressEpsilon = 1e-4f
  * - **Zero-duration visibility:** [EnterSpec] / [ExitSpec] with [com.rend1x.composeanimatedlist.animation.EnterSpec.None],
  *   [com.rend1x.composeanimatedlist.animation.ExitSpec.None], or `durationMillis = 0` use tweens of length `0`;
  *   the animation completes to its target in the same [LaunchedEffect] run, then exit completion runs.
+ * - **Keys:** [key] must be unique within each [items] snapshot. Debug builds of this library fail
+ *   fast with a clear error; release builds keep the last item per duplicated key (see README).
  */
 @Composable
 fun <T> AnimatedColumn(

@@ -15,8 +15,9 @@ package com.rend1x.composeanimatedlist.state
  * - **Update ordering:** Each call is a single diff from [current] to [newItems]. Chaining calls
  *   (as [AnimatedListRenderState] does when [items] updates repeatedly) applies updates in sequence;
  *   the render list is always the result of the last applied diff.
- * - **Keys:** [newItems] must not contain duplicate keys; [keySelector] is used consistently with
- *   [com.rend1x.composeanimatedlist.AnimatedColumn]’s `key` parameter.
+ * - **Keys:** [newItems] must not contain duplicate keys (see [AnimatedListKeys] and README). Debug
+ *   library builds throw with a clear message; release builds normalize by keeping the last item per
+ *   key. [keySelector] must match [com.rend1x.composeanimatedlist.AnimatedColumn]’s `key`.
  */
 internal object AnimatedListDiffer {
 
@@ -25,7 +26,8 @@ internal object AnimatedListDiffer {
         newItems: List<T>,
         keySelector: (T) -> Any,
     ): List<AnimatedListItem<T>> {
-        val newKeyed = newItems.associateByDistinctKey(keySelector)
+        val sanitizedNewItems = AnimatedListKeys.sanitizeAnimatedListInput(newItems, keySelector)
+        val newKeyed = sanitizedNewItems.associateByTo(linkedMapOf(), keySelector)
         val newKeys = newKeyed.keys
         val currentKeys = current.mapTo(linkedSetOf()) { it.key }
 
@@ -44,11 +46,11 @@ internal object AnimatedListDiffer {
         }.toMutableList()
 
         // Insert entering items at positions based on new list order.
-        newItems.forEachIndexed { index, item ->
+        sanitizedNewItems.forEachIndexed { index, item ->
             val key = keySelector(item)
             if (key in currentKeys) return@forEachIndexed
 
-            val previousKnownKey = newItems
+            val previousKnownKey = sanitizedNewItems
                 .subList(0, index)
                 .asReversed()
                 .firstNotNullOfOrNull { candidate ->
@@ -69,8 +71,8 @@ internal object AnimatedListDiffer {
                 return@forEachIndexed
             }
 
-            val nextKnownKey = newItems
-                .subList(index + 1, newItems.size)
+            val nextKnownKey = sanitizedNewItems
+                .subList(index + 1, sanitizedNewItems.size)
                 .firstNotNullOfOrNull { candidate ->
                     val candidateKey = keySelector(candidate)
                     candidateKey.takeIf { presentKey -> render.any { it.key == presentKey } }
@@ -106,17 +108,4 @@ internal object AnimatedListDiffer {
             }
         }
     }
-}
-
-private fun <T> List<T>.associateByDistinctKey(
-    keySelector: (T) -> Any,
-): LinkedHashMap<Any, T> {
-    val map = linkedMapOf<Any, T>()
-    for (item in this) {
-        val key = keySelector(item)
-        check(map.put(key, item) == null) {
-            "Animated list keys must be unique. Duplicated key=$key"
-        }
-    }
-    return LinkedHashMap(map)
 }

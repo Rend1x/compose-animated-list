@@ -1,7 +1,6 @@
 package com.rend1x.composeanimatedlist.state
 
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class AnimatedListDifferTest {
@@ -85,19 +84,5 @@ class AnimatedListDifferTest {
         assertEquals(listOf("a", "b"), s2.map { it.key })
         assertEquals(PresenceState.Present, s2[0].presence)
         assertEquals(PresenceState.Exiting, s2[1].presence)
-    }
-
-    @Test
-    fun duplicateKeysInInput_throw() {
-        try {
-            AnimatedListDiffer.diff(
-                current = emptyList(),
-                newItems = listOf(Item("x", "1"), Item("x", "2")),
-                keySelector = key,
-            )
-            throw AssertionError("expected exception")
-        } catch (e: IllegalStateException) {
-            assertTrue(e.message!!.contains("unique"))
-        }
     }
 }

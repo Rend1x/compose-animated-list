@@ -55,8 +55,11 @@ internal class AnimatedListRenderState<T>(
     initialItems: List<T>,
     keySelector: (T) -> Any,
 ) {
+    private val sanitizedInitialItems =
+        AnimatedListKeys.sanitizeAnimatedListInput(initialItems, keySelector)
+
     var renderItems: List<AnimatedListItem<T>> by mutableStateOf(
-        value = initialItems.map { item ->
+        value = sanitizedInitialItems.map { item ->
             AnimatedListItem(
                 key = keySelector(item),
                 value = item,
