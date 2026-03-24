@@ -9,7 +9,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 
 /**
- * Public controller for AnimatedColumn.
+ * Optional controller for [com.rend1x.composeanimatedlist.AnimatedColumn].
+ *
+ * **Semantics:**
+ * - [isAnimating] is true while at least one item row is running a transition coroutine (enter/exit
+ *   settle or “present” smoothing after a phase change).
+ * - [clearExitingNow] drops every row that is still retained after removal from the input list
+ *   (exit animation not yet finished) **without** playing exit animations. It does not affect
+ *   items that are still in the input list or still entering.
  */
 @Stable
 class AnimatedListState internal constructor() {
@@ -19,6 +26,7 @@ class AnimatedListState internal constructor() {
     val isAnimating: Boolean
         get() = activeAnimations > 0
 
+    /** Clears all exiting items immediately; see [AnimatedListState] class documentation. */
     fun clearExitingNow() {
         clearExitingCallback?.invoke()
     }

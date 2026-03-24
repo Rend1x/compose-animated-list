@@ -1,10 +1,22 @@
 package com.rend1x.composeanimatedlist.state
 
 /**
- * Produces next render list:
- * - keeps removed items as Exiting
- * - marks newly added items as Entering
- * - keeps currently visible items as Present
+ * Computes the internal render list for [com.rend1x.composeanimatedlist.AnimatedColumn] from the
+ * previous render snapshot and the latest [items] from the caller.
+ *
+ * **Documented guarantees** (see project README “Behavior guarantees”):
+ *
+ * - **Exiting retention:** Keys that disappear from [newItems] stay in the output with
+ *   [PresenceState.Exiting] and keep the **relative order** they had in [current] (including among
+ *   other exiting rows). Non-exiting neighbors keep their values from [newItems].
+ * - **Reinsertion:** If a key is present in [newItems] while still in [current] (including as
+ *   Exiting), the item becomes [PresenceState.Present] with the **latest value** from [newItems].
+ *   It does **not** get [PresenceState.Entering]; only keys that were absent from [current] do.
+ * - **Update ordering:** Each call is a single diff from [current] to [newItems]. Chaining calls
+ *   (as [AnimatedListRenderState] does when [items] updates repeatedly) applies updates in sequence;
+ *   the render list is always the result of the last applied diff.
+ * - **Keys:** [newItems] must not contain duplicate keys; [keySelector] is used consistently with
+ *   [com.rend1x.composeanimatedlist.AnimatedColumn]’s `key` parameter.
  */
 internal object AnimatedListDiffer {
 

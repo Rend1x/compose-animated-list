@@ -16,6 +16,10 @@ import androidx.compose.runtime.Immutable
  *   slowest sub-transition.
  *
  * All progress values are in `0f..1f` for **Entering** and **Exiting**, and `1f` while **Visible**.
+ *
+ * **Stability:** When [AnimatedColumn]’s [items] changes quickly, lifecycle and progress follow the
+ * guarantees described in the library README (“Behavior guarantees”): exiting retention,
+ * reinsertion without a second enter phase, and ordering of applied updates.
  */
 @Immutable
 interface AnimatedItemScope {

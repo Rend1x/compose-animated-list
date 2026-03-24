@@ -16,14 +16,16 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 import com.rend1x.composeanimatedlist.animation.AnimatedItemDefaults
 import com.rend1x.composeanimatedlist.animation.AnimatedItemTransitionSpec
 import com.rend1x.composeanimatedlist.animation.EnterSpec
 import com.rend1x.composeanimatedlist.animation.ExitSpec
 import com.rend1x.composeanimatedlist.animation.PlacementBehavior
-import com.rend1x.composeanimatedlist.animation.VerticalDirection
+import com.rend1x.composeanimatedlist.animation.initialAlpha
+import com.rend1x.composeanimatedlist.animation.initialOffsetDp
+import com.rend1x.composeanimatedlist.animation.targetAlpha
+import com.rend1x.composeanimatedlist.animation.targetOffsetDp
+import com.rend1x.composeanimatedlist.animation.visibilityAnimationDurationMillis
 import com.rend1x.composeanimatedlist.state.AnimatedListItem
 import com.rend1x.composeanimatedlist.state.AnimatedListRenderState
 import com.rend1x.composeanimatedlist.state.AnimatedListState
@@ -42,6 +44,19 @@ private const val ProgressEpsilon = 1e-4f
  *
  * The item content lambda is [AnimatedItemScope]: [ItemPhase] plus [AnimatedItemScope.visibilityProgress],
  * [AnimatedItemScope.placementProgress], and [AnimatedItemScope.progress] (their minimum).
+ *
+ * **Update and transition semantics** (see README “Behavior guarantees” for full detail):
+ *
+ * - **Input updates:** Each time [items] or [key] changes, the internal render list is updated by
+ *   diffing from the previous render snapshot. Rapid recompositions coalesce: the coroutine tied to
+ *   [items] is restarted, and the last committed [items] wins for that frame’s effect run.
+ * - **Exiting retention:** Removed keys stay composed until their exit animation finishes (or
+ *   [AnimatedListState.clearExitingNow] is used).
+ * - **Reinsertion:** If a key is removed and added back before exit removal, it becomes [ItemPhase.Visible]
+ *   with the new element value—it does not re-enter as [ItemPhase.Entering].
+ * - **Zero-duration visibility:** [EnterSpec] / [ExitSpec] with [com.rend1x.composeanimatedlist.animation.EnterSpec.None],
+ *   [com.rend1x.composeanimatedlist.animation.ExitSpec.None], or `durationMillis = 0` use tweens of length `0`;
+ *   the animation completes to its target in the same [LaunchedEffect] run, then exit completion runs.
  */
 @Composable
 fun <T> AnimatedColumn(
@@ -219,13 +234,13 @@ private suspend fun animateEnter(
         launch {
             alpha.animateTo(
                 targetValue = 1f,
-                animationSpec = tween(durationMillis = enter.durationMillis),
+                animationSpec = tween(durationMillis = enter.visibilityAnimationDurationMillis),
             )
         }
         launch {
             translationY.animateTo(
                 targetValue = 0f,
-                animationSpec = tween(durationMillis = enter.durationMillis),
+                animationSpec = tween(durationMillis = enter.visibilityAnimationDurationMillis),
             )
         }
         launch {
@@ -280,13 +295,13 @@ private suspend fun animateExit(
         launch {
             alpha.animateTo(
                 targetValue = exit.targetAlpha,
-                animationSpec = tween(durationMillis = exit.durationMillis),
+                animationSpec = tween(durationMillis = exit.visibilityAnimationDurationMillis),
             )
         }
         launch {
             translationY.animateTo(
                 targetValue = with(density) { exit.targetOffsetDp.toPx() },
-                animationSpec = tween(durationMillis = exit.durationMillis),
+                animationSpec = tween(durationMillis = exit.visibilityAnimationDurationMillis),
             )
         }
         launch {
@@ -429,60 +444,3 @@ private fun slideProgressTowardTarget(
     return (1f - abs(translationY) / denom).coerceIn(0f, 1f)
 }
 
-private val EnterSpec.initialAlpha: Float
-    get() = when (this) {
-        EnterSpec.None -> 1f
-        is EnterSpec.Fade -> 0f
-        is EnterSpec.SlideVertical -> 1f
-        is EnterSpec.FadeAndSlide -> 0f
-    }
-
-private val EnterSpec.initialOffsetDp: Dp
-    get() = when (this) {
-        EnterSpec.None -> 0.dp
-        is EnterSpec.Fade -> 0.dp
-        is EnterSpec.SlideVertical -> offset
-        is EnterSpec.FadeAndSlide -> offset
-    }
-
-private val EnterSpec.durationMillis: Int
-    get() = when (this) {
-        EnterSpec.None -> 0
-        is EnterSpec.Fade -> durationMillis
-        is EnterSpec.SlideVertical -> durationMillis
-        is EnterSpec.FadeAndSlide -> durationMillis
-    }
-
-private val ExitSpec.targetAlpha: Float
-    get() = when (this) {
-        ExitSpec.None -> 0f
-        is ExitSpec.Fade -> 0f
-        is ExitSpec.SlideVertical -> 1f
-        is ExitSpec.FadeAndSlide -> 0f
-    }
-
-private val ExitSpec.targetOffsetDp: Dp
-    get() = when (this) {
-        ExitSpec.None -> 0.dp
-        is ExitSpec.Fade -> 0.dp
-        is ExitSpec.SlideVertical -> {
-            when (direction) {
-                VerticalDirection.Up -> -offset
-                VerticalDirection.Down -> offset
-            }
-        }
-        is ExitSpec.FadeAndSlide -> {
-            when (direction) {
-                VerticalDirection.Up -> -offset
-                VerticalDirection.Down -> offset
-            }
-        }
-    }
-
-private val ExitSpec.durationMillis: Int
-    get() = when (this) {
-        ExitSpec.None -> 0
-        is ExitSpec.Fade -> durationMillis
-        is ExitSpec.SlideVertical -> durationMillis
-        is ExitSpec.FadeAndSlide -> durationMillis
-    }

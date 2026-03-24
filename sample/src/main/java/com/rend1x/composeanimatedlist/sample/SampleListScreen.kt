@@ -239,7 +239,7 @@ fun SampleListScreen() {
                     text = stringResource(R.string.section_enter),
                     style = MaterialTheme.typography.subtitle2,
                 )
-                EnterKind.values().forEach { kind ->
+                EnterKind.entries.forEach { kind ->
                     RadioOptionRow(
                         selected = enterKind == kind,
                         label = stringResource(enterKindLabel(kind)),
@@ -266,7 +266,7 @@ fun SampleListScreen() {
                     text = stringResource(R.string.section_exit),
                     style = MaterialTheme.typography.subtitle2,
                 )
-                ExitKind.values().forEach { kind ->
+                ExitKind.entries.forEach { kind ->
                     RadioOptionRow(
                         selected = exitKind == kind,
                         label = stringResource(exitKindLabel(kind)),
@@ -311,7 +311,7 @@ fun SampleListScreen() {
                     text = stringResource(R.string.section_placement),
                     style = MaterialTheme.typography.subtitle2,
                 )
-                PlacementKind.values().forEach { kind ->
+                PlacementKind.entries.forEach { kind ->
                     RadioOptionRow(
                         selected = placementKind == kind,
                         label = stringResource(placementKindLabel(kind)),

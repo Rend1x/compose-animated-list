@@ -38,6 +38,17 @@ Each item’s content lambda receives [`AnimatedItemScope`](animatedlist/src/mai
 
 This split keeps the contract **stable** if you need independent fade/slide vs height behavior; use **`progress`** when one combined value is enough.
 
+### Behavior guarantees
+
+These rules are what the implementation and tests commit to—use them when reasoning about production behavior under load or overlapping updates.
+
+| Topic | Guarantee |
+|--------|-----------|
+| **Exiting retention** | If a key disappears from `items`, that row stays in the internal render list with phase **Exiting** until its exit animation finishes and the row is removed, or until you call [`AnimatedListState.clearExitingNow()`](animatedlist/src/main/java/com/rend1x/composeanimatedlist/state/AnimatedListState.kt). Exiting rows keep the **relative order** they had among themselves and stable neighbors (order is derived from the previous render list). |
+| **Reinsertion** | If a key comes back in `items` while its row was still **Exiting**, that row becomes **Visible** with the **latest** element value. It does **not** go through **Entering** again—only keys that were not in the previous render snapshot enter as **Entering**. |
+| **Zero-duration transitions** | [`EnterSpec.None`](animatedlist/src/main/java/com/rend1x/composeanimatedlist/animation/EnterSpec.kt) / [`ExitSpec.None`](animatedlist/src/main/java/com/rend1x/composeanimatedlist/animation/ExitSpec.kt) use visibility tween duration `0`. For [`Fade`](animatedlist/src/main/java/com/rend1x/composeanimatedlist/animation/EnterSpec.kt) / [`SlideVertical`](animatedlist/src/main/java/com/rend1x/composeanimatedlist/animation/EnterSpec.kt) / [`FadeAndSlide`](animatedlist/src/main/java/com/rend1x/composeanimatedlist/animation/EnterSpec.kt), setting `durationMillis = 0` means the same: tweens complete immediately in the same coroutine work, then exit completion runs. For [`PlacementBehavior.Animated`](animatedlist/src/main/java/com/rend1x/composeanimatedlist/animation/PlacementBehavior.kt), `durationMillis = 0` collapses height animation the same way. After **Visible**, a short internal “present settle” (120 ms) may still run to align alpha, offset, and height—see [`AnimatedColumn`](animatedlist/src/main/java/com/rend1x/composeanimatedlist/AnimatedColumn.kt). |
+| **Update ordering** | Each time `items` or `key` changes, the list diffs **from the previous internal render snapshot** to the new `items`. Rapid updates are applied in **composition order**: the `LaunchedEffect` tied to `items` restarts, so intermediate `items` values may be skipped if the composition never commits them, but every applied step is a well-formed diff. The final render state matches the last applied `items` snapshot. |
+
 ### Modifier helper
 
 Optional preset that maps **`visibilityProgress`** to a simple fade + slide (useful with `AnimatedItemDefaults.none()` if you want the list to only handle diffing and height):
