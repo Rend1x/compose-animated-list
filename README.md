@@ -1,6 +1,6 @@
 # compose-animated-list
 
-Diff-driven animated column for Jetpack Compose: each item exposes a **lifecycle** (`phase` + `progress`) so you can build custom transitions without guessing enter/exit flags.
+Diff-driven animated column for Jetpack Compose: each item exposes an explicit **lifecycle** ([`ItemPhase`](animatedlist/src/main/java/com/rend1x/composeanimatedlist/ItemPhase.kt)) and **progress** ([`AnimatedItemScope`](animatedlist/src/main/java/com/rend1x/composeanimatedlist/AnimatedItemScope.kt)) so you can build custom transitions without guessing enter/exit flags.
 
 ## Usage
 
@@ -12,8 +12,8 @@ AnimatedColumn(
 ) { item ->
     Card(
         modifier = Modifier.graphicsLayer {
-            alpha = progress
-            translationY = (1f - progress) * 24f
+            alpha = visibilityProgress
+            translationY = (1f - visibilityProgress) * 24f
         }
     ) {
         Text(item.title)
@@ -27,16 +27,20 @@ AnimatedColumn(
 
 ### Item lifecycle
 
-Each item exposes:
+Each item’s content lambda receives [`AnimatedItemScope`](animatedlist/src/main/java/com/rend1x/composeanimatedlist/AnimatedItemScope.kt):
 
-- **`phase`**: `Entering` / `Visible` / `Exiting`
-- **`progress`**: `0f..1f` — entering moves `0 → 1`, visible stays `1`, exiting moves `1 → 0` (derived from the active transition: fade, slide, and optional height placement).
+| API | Meaning |
+|-----|--------|
+| **`phase`** | [`ItemPhase`](animatedlist/src/main/java/com/rend1x/composeanimatedlist/ItemPhase.kt): **Entering**, **Visible**, or **Exiting** — mutually exclusive; one key moves **Entering → Visible → Exiting**. |
+| **`visibilityProgress`** | `0f..1f` for fade and slide only (not row height). **Entering:** `0 → 1`. **Visible:** `1`. **Exiting:** `1 → 0`. Use this for inner content effects (icons, text, secondary motion). |
+| **`placementProgress`** | `0f..1f` for the row’s **layout height** when placement is animated; otherwise `1f`. Mirrors height expand/collapse from [`PlacementBehavior.Animated`](animatedlist/src/main/java/com/rend1x/composeanimatedlist/animation/PlacementBehavior.kt). |
+| **`progress`** | `min(visibilityProgress, placementProgress)` — conservative “overall” completion: advances only as fast as the slower of visibility vs height. Same semantics as the previous single `progress` field. |
 
-This allows fully custom animations on top of the library-driven container transition.
+This split keeps the contract **stable** if you need independent fade/slide vs height behavior; use **`progress`** when one combined value is enough.
 
 ### Modifier helper
 
-Optional preset that maps `progress` to a simple fade + slide (useful with `AnimatedItemDefaults.none()` if you want the list to only handle diffing and height):
+Optional preset that maps **`visibilityProgress`** to a simple fade + slide (useful with `AnimatedItemDefaults.none()` if you want the list to only handle diffing and height):
 
 ```kotlin
 Card(modifier = Modifier.animatedItem(this)) { … }
@@ -54,5 +58,5 @@ AnimatedItemDefaults.none()
 ## Modules
 
 - **`animatedlist`** — library
-- **`sample`** — playground (transition tuning, tag chips, list demos)
+- **`sample`** — playground (transition tuning, tag chips, list demos; shows phase + split progress while animating)
 

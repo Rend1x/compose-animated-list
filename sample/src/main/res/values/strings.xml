@@ -10,6 +10,7 @@
     <string name="status_idle">Idle</string>
     <string name="status_visible">Visible</string>
     <string name="removing_label">Removing…</string>
+    <string name="lifecycle_progress_debug">Visibility %1$.2f · Placement %2$.2f · Overall %3$.2f</string>
 
     <string name="animating_true">List animations running…</string>
     <string name="animating_false">No list animations</string>

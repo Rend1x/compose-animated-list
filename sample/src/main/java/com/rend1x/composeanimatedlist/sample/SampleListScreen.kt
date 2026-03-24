@@ -476,8 +476,10 @@ fun SampleListScreen() {
                     .fillMaxWidth()
                     .padding(vertical = 4.dp)
                     .graphicsLayer {
-                        scaleX = 0.9f + 0.1f * progress
-                        scaleY = 0.9f + 0.1f * progress
+                        // visibilityProgress tracks fade/slide only; placementProgress is row height when animated.
+                        val s = 0.9f + 0.1f * visibilityProgress
+                        scaleX = s
+                        scaleY = s
                     },
                 shape = RoundedCornerShape(12.dp),
                 elevation = 4.dp,
@@ -496,6 +498,18 @@ fun SampleListScreen() {
                         style = MaterialTheme.typography.caption,
                         color = MaterialTheme.colors.primary,
                     )
+                    if (phase != ItemPhase.Visible) {
+                        Text(
+                            text = stringResource(
+                                R.string.lifecycle_progress_debug,
+                                visibilityProgress,
+                                placementProgress,
+                                progress,
+                            ),
+                            style = MaterialTheme.typography.caption,
+                            color = MaterialTheme.colors.onSurface.copy(alpha = 0.54f),
+                        )
+                    }
                 }
             }
         }

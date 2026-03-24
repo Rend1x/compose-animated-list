@@ -30,7 +30,6 @@ import com.rend1x.composeanimatedlist.state.AnimatedListState
 import com.rend1x.composeanimatedlist.state.PresenceState
 import com.rend1x.composeanimatedlist.state.rememberAnimatedListState
 import kotlin.math.abs
-import kotlin.math.min
 import kotlin.math.roundToInt
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
@@ -39,7 +38,10 @@ private const val PresentSettleDurationMillis = 120
 private const val ProgressEpsilon = 1e-4f
 
 /**
- * Column-based list with diff-driven enter/exit animations and per-item lifecycle ([AnimatedItemScope]).
+ * Column-based list with diff-driven enter/exit animations.
+ *
+ * The item content lambda is [AnimatedItemScope]: [ItemPhase] plus [AnimatedItemScope.visibilityProgress],
+ * [AnimatedItemScope.placementProgress], and [AnimatedItemScope.progress] (their minimum).
  */
 @Composable
 fun <T> AnimatedColumn(
@@ -178,7 +180,7 @@ private fun <T> ColumnScope.AnimatedColumnItem(
         val enterOffsetPx = with(density) { transitionSpec.enter.initialOffsetDp.toPx() }
         val exitOffsetPx = with(density) { transitionSpec.exit.targetOffsetDp.toPx() }
         val placementAnimated = transitionSpec.placement is PlacementBehavior.Animated
-        val progress = itemLifecycleProgress(
+        val lifecycle = itemLifecycleProgress(
             presence = item.presence,
             enter = transitionSpec.enter,
             exit = transitionSpec.exit,
@@ -191,7 +193,8 @@ private fun <T> ColumnScope.AnimatedColumnItem(
         )
         val scope = AnimatedItemScopeImpl(
             phase = item.presence.toItemPhase(),
-            progress = progress,
+            visibilityProgress = lifecycle.visibilityProgress,
+            placementProgress = lifecycle.placementProgress,
         )
         scope.content(item.value)
     }
@@ -305,6 +308,11 @@ private fun PresenceState.toItemPhase(): ItemPhase = when (this) {
     PresenceState.Exiting -> ItemPhase.Exiting
 }
 
+private data class ItemLifecycleProgress(
+    val visibilityProgress: Float,
+    val placementProgress: Float,
+)
+
 private fun itemLifecycleProgress(
     presence: PresenceState,
     enter: EnterSpec,
@@ -315,36 +323,48 @@ private fun itemLifecycleProgress(
     exitTargetOffsetPx: Float,
     sizeProgress: Float,
     placementAnimated: Boolean,
-): Float {
+): ItemLifecycleProgress {
     return when (presence) {
-        PresenceState.Present -> 1f
-        PresenceState.Entering -> enteringCompositeProgress(
-            enter = enter,
-            alpha = alpha,
-            translationY = translationY,
-            initialEnterOffsetPx = initialEnterOffsetPx,
-            sizeProgress = sizeProgress,
-            placementAnimated = placementAnimated,
-        ).coerceIn(0f, 1f)
+        PresenceState.Present -> ItemLifecycleProgress(
+            visibilityProgress = 1f,
+            placementProgress = 1f,
+        )
 
-        PresenceState.Exiting -> exitingCompositeProgress(
-            exit = exit,
-            alpha = alpha,
-            translationY = translationY,
-            exitTargetOffsetPx = exitTargetOffsetPx,
-            sizeProgress = sizeProgress,
-            placementAnimated = placementAnimated,
-        ).coerceIn(0f, 1f)
+        PresenceState.Entering -> {
+            val visibility = enteringVisibilityProgress(
+                enter = enter,
+                alpha = alpha,
+                translationY = translationY,
+                initialEnterOffsetPx = initialEnterOffsetPx,
+            ).coerceIn(0f, 1f)
+            val placement = placementProgressValue(
+                sizeProgress = sizeProgress,
+                placementAnimated = placementAnimated,
+            ).coerceIn(0f, 1f)
+            ItemLifecycleProgress(visibilityProgress = visibility, placementProgress = placement)
+        }
+
+        PresenceState.Exiting -> {
+            val visibility = exitingVisibilityProgress(
+                exit = exit,
+                alpha = alpha,
+                translationY = translationY,
+                exitTargetOffsetPx = exitTargetOffsetPx,
+            ).coerceIn(0f, 1f)
+            val placement = placementProgressValue(
+                sizeProgress = sizeProgress,
+                placementAnimated = placementAnimated,
+            ).coerceIn(0f, 1f)
+            ItemLifecycleProgress(visibilityProgress = visibility, placementProgress = placement)
+        }
     }
 }
 
-private fun enteringCompositeProgress(
+private fun enteringVisibilityProgress(
     enter: EnterSpec,
     alpha: Float,
     translationY: Float,
     initialEnterOffsetPx: Float,
-    sizeProgress: Float,
-    placementAnimated: Boolean,
 ): Float {
     val fadeP = when (enter) {
         EnterSpec.None, is EnterSpec.SlideVertical -> 1f
@@ -359,17 +379,14 @@ private fun enteringCompositeProgress(
         }
         else -> 1f
     }
-    val sizeP = if (placementAnimated) sizeProgress else 1f
-    return minOf(fadeP, slideP, sizeP)
+    return minOf(fadeP, slideP)
 }
 
-private fun exitingCompositeProgress(
+private fun exitingVisibilityProgress(
     exit: ExitSpec,
     alpha: Float,
     translationY: Float,
     exitTargetOffsetPx: Float,
-    sizeProgress: Float,
-    placementAnimated: Boolean,
 ): Float {
     val fadeP = when (exit) {
         is ExitSpec.SlideVertical -> 1f
@@ -384,9 +401,13 @@ private fun exitingCompositeProgress(
         }
         else -> 1f
     }
-    val sizeP = if (placementAnimated) sizeProgress else 1f
-    return minOf(fadeP, slideP, sizeP)
+    return minOf(fadeP, slideP)
 }
+
+private fun placementProgressValue(
+    sizeProgress: Float,
+    placementAnimated: Boolean,
+): Float = if (placementAnimated) sizeProgress else 1f
 
 /** Enter: from [initialEnterOffsetPx] toward 0. */
 private fun slideProgressFromTranslation(
