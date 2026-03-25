@@ -26,10 +26,10 @@ import com.rend1x.composeanimatedlist.animation.initialOffsetDp
 import com.rend1x.composeanimatedlist.animation.targetAlpha
 import com.rend1x.composeanimatedlist.animation.targetOffsetDp
 import com.rend1x.composeanimatedlist.animation.visibilityAnimationDurationMillis
-import com.rend1x.composeanimatedlist.state.AnimatedListItem
+import com.rend1x.composeanimatedlist.core.AnimatedListItem
+import com.rend1x.composeanimatedlist.core.PresenceState
 import com.rend1x.composeanimatedlist.state.AnimatedListRenderState
 import com.rend1x.composeanimatedlist.state.AnimatedListState
-import com.rend1x.composeanimatedlist.state.PresenceState
 import com.rend1x.composeanimatedlist.state.rememberAnimatedListState
 import kotlin.math.abs
 import kotlin.math.roundToInt
@@ -42,8 +42,11 @@ private const val ProgressEpsilon = 1e-4f
 /**
  * Column-based list with diff-driven enter/exit animations.
  *
- * The item content lambda is [AnimatedItemScope]: [ItemPhase] plus [AnimatedItemScope.visibilityProgress],
- * [AnimatedItemScope.placementProgress], and [AnimatedItemScope.progress] (their minimum).
+ * The item [content] lambda receives [AnimatedItemScope]. Recommended: [animatedItem] on the row with
+ * [transitionSpec] = [com.rend1x.composeanimatedlist.animation.AnimatedItemDefaults.none] (README “Usage”).
+ * Advanced: [AnimatedItemScope.phase] ([ItemPhase]) for lifecycle, and [AnimatedItemScope.visibilityProgress],
+ * [AnimatedItemScope.placementProgress], and [AnimatedItemScope.progress] for custom motion with a non-`none`
+ * [transitionSpec]. Full semantics are on [AnimatedItemScope].
  *
  * **Update and transition semantics** (see README “Behavior guarantees” for full detail):
  *

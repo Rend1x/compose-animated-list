@@ -15,5 +15,6 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "compose-animated-list"
+include(":animatedlist-core")
 include(":animatedlist")
 include(":sample")

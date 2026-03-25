@@ -1,17 +1,15 @@
-package com.rend1x.composeanimatedlist.state
+package com.rend1x.composeanimatedlist.core
 
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-/**
- * Duplicate-key validation runs only for **debug** builds of this module; these tests live under
- * `src/testDebug` so they are not executed against the release `BuildConfig.DEBUG = false` variant.
- */
-class AnimatedListDuplicateKeysDebugTest {
+class AnimatedListDuplicateKeysStrictTest {
 
     private data class Item(val id: String, val payload: String)
 
     private val key: (Item) -> String = { it.id }
+
+    private val keyPolicy = AnimatedListKeyPolicy.Strict
 
     @Test
     fun duplicateKeysInDiff_throwWithIndices() {
@@ -20,6 +18,7 @@ class AnimatedListDuplicateKeysDebugTest {
                 current = emptyList(),
                 newItems = listOf(Item("x", "1"), Item("x", "2")),
                 keySelector = key,
+                keyPolicy = keyPolicy,
             )
             throw AssertionError("expected exception")
         } catch (e: IllegalStateException) {
@@ -29,11 +28,12 @@ class AnimatedListDuplicateKeysDebugTest {
     }
 
     @Test
-    fun duplicateKeysInInitialRenderState_throw() {
+    fun duplicateKeysInInitialEngine_throw() {
         try {
-            AnimatedListRenderState(
+            AnimatedListRenderEngine(
                 initialItems = listOf(Item("a", "1"), Item("a", "2")),
                 keySelector = key,
+                keyPolicy = keyPolicy,
             )
             throw AssertionError("expected exception")
         } catch (e: IllegalStateException) {

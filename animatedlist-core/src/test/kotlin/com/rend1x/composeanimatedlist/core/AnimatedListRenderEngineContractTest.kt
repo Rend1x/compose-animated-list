@@ -1,0 +1,176 @@
+package com.rend1x.composeanimatedlist.core
+
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
+import org.junit.Test
+
+/**
+ * Contract tests for [AnimatedListRenderEngine]: observable snapshots only—no reliance on
+ * diff internals or collection implementation details.
+ */
+class AnimatedListRenderEngineContractTest {
+
+    private data class Row(val id: String, val payload: String)
+
+    private val key: (Row) -> String = { it.id }
+
+    @Test
+    fun identicalConsecutiveUpdates_areIdempotent() {
+        val engine = AnimatedListRenderEngine(
+            initialItems = listOf(Row("a", "0")),
+            keySelector = key,
+            keyPolicy = AnimatedListKeyPolicy.Strict,
+        )
+        engine.update(listOf(Row("a", "1"), Row("b", "1")), key)
+        fun snapshot() = engine.items.map { Triple(it.key, it.value, it.presence) }
+        val afterFirst = snapshot()
+
+        engine.update(listOf(Row("a", "1"), Row("b", "1")), key)
+
+        assertEquals(afterFirst, snapshot())
+    }
+
+    @Test
+    fun newlyAddedKey_isEntering() {
+        val engine = AnimatedListRenderEngine(
+            initialItems = listOf(Row("a", "1")),
+            keySelector = key,
+            keyPolicy = AnimatedListKeyPolicy.Strict,
+        )
+        engine.update(listOf(Row("a", "1"), Row("b", "2")), key)
+        val b = engine.items.first { it.key == "b" }
+        assertEquals(PresenceState.Entering, b.presence)
+        assertEquals("2", b.value.payload)
+    }
+
+    @Test
+    fun removedKey_isExiting_andRetainedUntilHandled() {
+        val engine = AnimatedListRenderEngine(
+            initialItems = listOf(Row("a", "1"), Row("b", "2")),
+            keySelector = key,
+            keyPolicy = AnimatedListKeyPolicy.Strict,
+        )
+        engine.update(listOf(Row("a", "1")), key)
+        assertEquals(2, engine.items.size)
+        val b = engine.items.first { it.key == "b" }
+        assertEquals(PresenceState.Exiting, b.presence)
+        assertEquals("2", b.value.payload)
+    }
+
+    @Test
+    fun reinsertWhileExiting_becomesPresentWithLatestValue_notEntering() {
+        val engine = AnimatedListRenderEngine(
+            initialItems = listOf(Row("a", "1")),
+            keySelector = key,
+            keyPolicy = AnimatedListKeyPolicy.Strict,
+        )
+        engine.update(emptyList(), key)
+        assertEquals(PresenceState.Exiting, engine.items.single { it.key == "a" }.presence)
+
+        engine.update(listOf(Row("a", "fresh")), key)
+        val a = engine.items.single { it.key == "a" }
+        assertEquals(PresenceState.Present, a.presence)
+        assertEquals("fresh", a.value.payload)
+    }
+
+    @Test
+    fun mixedRemoveAndInsert_producesDeterministicKeyOrder() {
+        val engine = AnimatedListRenderEngine(
+            initialItems = listOf(
+                Row("a", "a"),
+                Row("b", "b"),
+                Row("c", "c"),
+            ),
+            keySelector = key,
+            keyPolicy = AnimatedListKeyPolicy.Strict,
+        )
+        engine.update(
+            listOf(Row("a", "a"), Row("d", "d"), Row("c", "c")),
+            key,
+        )
+        assertEquals(
+            listOf("a", "d", "b", "c"),
+            engine.items.map { it.key as String },
+        )
+        assertEquals(PresenceState.Present, engine.items.first { it.key == "a" }.presence)
+        assertEquals(PresenceState.Entering, engine.items.first { it.key == "d" }.presence)
+        assertEquals(PresenceState.Exiting, engine.items.first { it.key == "b" }.presence)
+        assertEquals(PresenceState.Present, engine.items.first { it.key == "c" }.presence)
+    }
+
+    @Test
+    fun clearExitingNow_removesOnlyExitingRows() {
+        val engine = AnimatedListRenderEngine(
+            initialItems = listOf(Row("a", "1"), Row("b", "2")),
+            keySelector = key,
+            keyPolicy = AnimatedListKeyPolicy.Strict,
+        )
+        engine.update(listOf(Row("a", "1")), key)
+        engine.update(listOf(Row("a", "1"), Row("c", "3")), key)
+
+        engine.clearExitingNow()
+
+        assertEquals(setOf("a", "c"), engine.items.map { it.key }.toSet())
+        assertTrue(engine.items.none { it.presence == PresenceState.Exiting })
+        assertEquals(PresenceState.Entering, engine.items.first { it.key == "c" }.presence)
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun strictPolicy_duplicateKeysInUpdate_throw() {
+        val engine = AnimatedListRenderEngine(
+            initialItems = emptyList(),
+            keySelector = key,
+            keyPolicy = AnimatedListKeyPolicy.Strict,
+        )
+        engine.update(
+            listOf(Row("x", "1"), Row("x", "2")),
+            key,
+        )
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun strictPolicy_duplicateKeysInInitialInput_throw() {
+        AnimatedListRenderEngine(
+            initialItems = listOf(Row("x", "1"), Row("x", "2")),
+            keySelector = key,
+            keyPolicy = AnimatedListKeyPolicy.Strict,
+        )
+    }
+
+    @Test
+    fun lastWinsPolicy_keepsLastValuePerKey_andStableSurvivorOrder() {
+        val engine = AnimatedListRenderEngine(
+            initialItems = emptyList(),
+            keySelector = key,
+            keyPolicy = AnimatedListKeyPolicy.LastWins,
+        )
+        engine.update(
+            listOf(
+                Row("a", "first"),
+                Row("b", "b"),
+                Row("a", "last"),
+            ),
+            key,
+        )
+        assertEquals(listOf("b", "a"), engine.items.map { it.key })
+        assertEquals("last", engine.items.first { it.key == "a" }.value.payload)
+        assertEquals("b", engine.items.first { it.key == "b" }.value.payload)
+        assertTrue(engine.items.all { it.presence == PresenceState.Entering })
+    }
+
+    @Test
+    fun lastWinsPolicy_duplicateKeysInSingleUpdate_yieldOneRowWithLastPayload() {
+        val engine = AnimatedListRenderEngine(
+            initialItems = listOf(Row("k", "0")),
+            keySelector = key,
+            keyPolicy = AnimatedListKeyPolicy.LastWins,
+        )
+        engine.update(
+            listOf(Row("k", "1"), Row("k", "2")),
+            key,
+        )
+        assertEquals(1, engine.items.size)
+        assertEquals("2", engine.items.single().value.payload)
+        assertEquals(PresenceState.Present, engine.items.single().presence)
+    }
+}

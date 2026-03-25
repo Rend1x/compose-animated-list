@@ -32,6 +32,8 @@ android {
 }
 
 dependencies {
+    implementation(project(":animatedlist-core"))
+
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.animation)
     implementation(libs.androidx.compose.foundation)

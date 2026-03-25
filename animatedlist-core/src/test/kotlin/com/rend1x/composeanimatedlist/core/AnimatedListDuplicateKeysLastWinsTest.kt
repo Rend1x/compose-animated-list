@@ -1,16 +1,15 @@
-package com.rend1x.composeanimatedlist.state
+package com.rend1x.composeanimatedlist.core
 
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
-/**
- * Release builds use `BuildConfig.DEBUG = false` and normalize duplicate keys instead of throwing.
- */
-class AnimatedListDuplicateKeysReleaseTest {
+class AnimatedListDuplicateKeysLastWinsTest {
 
     private data class Item(val id: String, val payload: String)
 
     private val key: (Item) -> String = { it.id }
+
+    private val keyPolicy = AnimatedListKeyPolicy.LastWins
 
     @Test
     fun duplicateKeysInDiff_keepsLastItemPerKey() {
@@ -18,6 +17,7 @@ class AnimatedListDuplicateKeysReleaseTest {
             current = emptyList(),
             newItems = listOf(Item("x", "1"), Item("x", "2")),
             keySelector = key,
+            keyPolicy = keyPolicy,
         )
         assertEquals(1, out.size)
         assertEquals("2", out.single().value.payload)
@@ -25,12 +25,13 @@ class AnimatedListDuplicateKeysReleaseTest {
     }
 
     @Test
-    fun duplicateKeysInInitialRenderState_keepsLastItem() {
-        val state = AnimatedListRenderState(
+    fun duplicateKeysInInitialEngine_keepsLastItem() {
+        val engine = AnimatedListRenderEngine(
             initialItems = listOf(Item("a", "1"), Item("a", "2")),
             keySelector = key,
+            keyPolicy = keyPolicy,
         )
-        assertEquals(1, state.renderItems.size)
-        assertEquals("2", state.renderItems.single().value.payload)
+        assertEquals(1, engine.items.size)
+        assertEquals("2", engine.items.single().value.payload)
     }
 }

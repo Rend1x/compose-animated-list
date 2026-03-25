@@ -22,6 +22,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.rend1x.composeanimatedlist.AnimatedColumn
+import com.rend1x.composeanimatedlist.animatedItem
 import com.rend1x.composeanimatedlist.animation.AnimatedItemDefaults
 
 @Preview(
@@ -104,16 +105,19 @@ private fun AnimatedColumnPreviewScreen() {
         AnimatedColumn(
             items = items,
             key = { it.id },
-            transitionSpec = AnimatedItemDefaults.fade(),
+            transitionSpec = AnimatedItemDefaults.none(),
             modifier = Modifier.fillMaxWidth(),
         ) { item ->
-            DemoItemCard(item = item)
+            DemoItemCard(
+                item = item,
+                modifier = Modifier.animatedItem(this),
+            )
         }
     }
 }
 
 @Composable
-private fun DemoItemCard(item: DemoItem) {
+private fun DemoItemCard(item: DemoItem, modifier: Modifier = Modifier) {
     val containerColor = if (item.id % 2 == 0) {
         Color(0xFFE8F0FE)
     } else {
@@ -121,7 +125,7 @@ private fun DemoItemCard(item: DemoItem) {
     }
 
     Surface(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp),
         shape = RoundedCornerShape(12.dp),

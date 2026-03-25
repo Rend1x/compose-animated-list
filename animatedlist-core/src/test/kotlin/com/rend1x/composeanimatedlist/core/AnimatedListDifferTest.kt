@@ -1,4 +1,4 @@
-package com.rend1x.composeanimatedlist.state
+package com.rend1x.composeanimatedlist.core
 
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -8,6 +8,8 @@ class AnimatedListDifferTest {
     private data class Item(val id: String, val payload: String)
 
     private val key: (Item) -> String = { it.id }
+
+    private val keyPolicy = AnimatedListKeyPolicy.Strict
 
     @Test
     fun removedKey_staysExiting_andKeepsOrderAmongNeighbors() {
@@ -23,6 +25,7 @@ class AnimatedListDifferTest {
             current = current,
             newItems = listOf(a, c),
             keySelector = key,
+            keyPolicy = keyPolicy,
         )
         assertEquals(listOf("a", "b", "c"), out.map { it.key })
         assertEquals(PresenceState.Present, out[0].presence)
@@ -43,6 +46,7 @@ class AnimatedListDifferTest {
             current = current,
             newItems = listOf(a, bNew),
             keySelector = key,
+            keyPolicy = keyPolicy,
         )
         val bItem = out.first { it.key == "b" }
         assertEquals(PresenceState.Present, bItem.presence)
@@ -59,6 +63,7 @@ class AnimatedListDifferTest {
             current = current,
             newItems = listOf(Item("a", "1"), b),
             keySelector = key,
+            keyPolicy = keyPolicy,
         )
         assertEquals(
             PresenceState.Entering,
@@ -75,11 +80,13 @@ class AnimatedListDifferTest {
             ),
             newItems = listOf("a", "b"),
             keySelector = { it },
+            keyPolicy = keyPolicy,
         )
         val s2 = AnimatedListDiffer.diff(
             current = s1,
             newItems = listOf("a"),
             keySelector = { it },
+            keyPolicy = keyPolicy,
         )
         assertEquals(listOf("a", "b"), s2.map { it.key })
         assertEquals(PresenceState.Present, s2[0].presence)

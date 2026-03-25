@@ -1,29 +1,25 @@
-package com.rend1x.composeanimatedlist.state
-
-import com.rend1x.composeanimatedlist.BuildConfig
+package com.rend1x.composeanimatedlist.core
 
 /**
- * Keys returned by [com.rend1x.composeanimatedlist.AnimatedColumn]'s `key` parameter must be
- * **unique within each `items` snapshot**. Duplicate keys produce undefined diff/animation behavior
- * (e.g. multiple rows sharing a Compose key).
+ * Keys returned by the list’s `key` function must be **unique within each `items` snapshot**.
+ * Duplicate keys produce undefined diff/animation behavior when not sanitized.
  *
- * **Debug builds** of this library call [sanitizeAnimatedListInput], which throws
- * [IllegalStateException] with indices when duplicates are detected.
- *
- * **Release builds** do not throw: the list is normalized by keeping the **last** occurrence of each
- * key (stable relative order among the kept items). Prefer fixing callers so debug and release match.
+ * With [AnimatedListKeyPolicy.Strict], duplicates throw [IllegalStateException] with indices.
+ * With [AnimatedListKeyPolicy.LastWins], the list is normalized by keeping the **last** occurrence
+ * of each key.
  */
-internal object AnimatedListKeys {
+object AnimatedListKeys {
 
     fun <T> sanitizeAnimatedListInput(
         items: List<T>,
         keySelector: (T) -> Any,
-    ): List<T> {
-        if (BuildConfig.DEBUG) {
+        policy: AnimatedListKeyPolicy,
+    ): List<T> = when (policy) {
+        AnimatedListKeyPolicy.Strict -> {
             validateNoDuplicateKeys(items, keySelector)
-            return items
+            items
         }
-        return deduplicateByKeyLastWins(items, keySelector)
+        AnimatedListKeyPolicy.LastWins -> deduplicateByKeyLastWins(items, keySelector)
     }
 
     private fun <T> validateNoDuplicateKeys(
@@ -48,8 +44,8 @@ internal object AnimatedListKeys {
     }
 
     /**
-     * Keeps the last occurrence of each key; order matches first-seen positions of those occurrences
-     * in the original list (equivalent to reversed + distinctBy key + reversed).
+     * Keeps the last occurrence of each key; result order is **increasing index of that last
+     * occurrence** in [items] (equivalent to `asReversed().distinctBy(key).asReversed()`).
      */
     private fun <T> deduplicateByKeyLastWins(
         items: List<T>,

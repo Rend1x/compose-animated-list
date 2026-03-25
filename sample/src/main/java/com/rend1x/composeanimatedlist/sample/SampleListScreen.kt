@@ -16,6 +16,7 @@ import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Card
 import androidx.compose.material.Divider
+import androidx.compose.material.LinearProgressIndicator
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.RadioButton
 import androidx.compose.material.Slider
@@ -35,6 +36,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.rend1x.composeanimatedlist.AnimatedColumn
 import com.rend1x.composeanimatedlist.ItemPhase
+import com.rend1x.composeanimatedlist.animatedItem
 import com.rend1x.composeanimatedlist.animation.AnimatedItemTransitionSpec
 import com.rend1x.composeanimatedlist.animation.AnimatedItemDefaults
 import com.rend1x.composeanimatedlist.animation.EnterSpec
@@ -169,6 +171,112 @@ fun SampleListScreen() {
             } else {
                 stringResource(R.string.animating_false)
             },
+            style = MaterialTheme.typography.caption,
+            color = MaterialTheme.colors.secondary,
+        )
+
+        Text(
+            text = stringResource(R.string.section_easy_path),
+            style = MaterialTheme.typography.subtitle2,
+        )
+        Text(
+            text = stringResource(R.string.easy_path_hint),
+            style = MaterialTheme.typography.caption,
+            color = MaterialTheme.colors.secondary,
+        )
+        AnimatedColumn(
+            items = items.toList(),
+            key = { it.id },
+            transitionSpec = AnimatedItemDefaults.none(),
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = if (horizontalCentered) {
+                Alignment.CenterHorizontally
+            } else {
+                Alignment.Start
+            },
+        ) { item ->
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp)
+                    .animatedItem(this),
+                shape = RoundedCornerShape(12.dp),
+                elevation = 2.dp,
+            ) {
+                Text(
+                    text = stringResource(R.string.item_title, item.id),
+                    modifier = Modifier.padding(16.dp),
+                    style = MaterialTheme.typography.body1,
+                )
+            }
+        }
+
+        Text(
+            text = stringResource(R.string.section_tags_easy),
+            style = MaterialTheme.typography.subtitle2,
+        )
+        Text(
+            text = stringResource(R.string.tag_remove_hint),
+            style = MaterialTheme.typography.caption,
+            color = MaterialTheme.colors.secondary,
+        )
+        AnimatedColumn(
+            items = activeTags.toList(),
+            key = { it.id },
+            transitionSpec = AnimatedItemDefaults.none(),
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = if (horizontalCentered) {
+                Alignment.CenterHorizontally
+            } else {
+                Alignment.Start
+            },
+        ) { tag ->
+            Surface(
+                modifier = Modifier
+                    .padding(vertical = 4.dp)
+                    .animatedItem(this)
+                    .clickable {
+                        activeTags.remove(tag)
+                    },
+                shape = RoundedCornerShape(20.dp),
+                color = MaterialTheme.colors.secondary.copy(alpha = 0.25f),
+                elevation = 0.dp,
+            ) {
+                Text(
+                    text = tag.label,
+                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
+                    style = MaterialTheme.typography.body2,
+                )
+            }
+        }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            tagPool.forEach { label ->
+                val already = activeTags.any { it.label == label }
+                Button(
+                    onClick = {
+                        if (!already) {
+                            activeTags.add(TagChip(nextTagId, label))
+                            nextTagId++
+                        }
+                    },
+                    enabled = !already,
+                ) {
+                    Text("+ $label")
+                }
+            }
+        }
+
+        Text(
+            text = stringResource(R.string.section_advanced_path),
+            style = MaterialTheme.typography.subtitle2,
+        )
+        Text(
+            text = stringResource(R.string.advanced_path_hint),
             style = MaterialTheme.typography.caption,
             color = MaterialTheme.colors.secondary,
         )
@@ -397,66 +505,7 @@ fun SampleListScreen() {
         }
 
         Text(
-            text = stringResource(R.string.section_tags_demo),
-            style = MaterialTheme.typography.subtitle2,
-        )
-        Text(
-            text = stringResource(R.string.tag_remove_hint),
-            style = MaterialTheme.typography.caption,
-            color = MaterialTheme.colors.secondary,
-        )
-        AnimatedColumn(
-            items = activeTags.toList(),
-            key = { it.id },
-            transitionSpec = AnimatedItemDefaults.fadeSlide(),
-            modifier = Modifier.fillMaxWidth(),
-            horizontalAlignment = if (horizontalCentered) {
-                Alignment.CenterHorizontally
-            } else {
-                Alignment.Start
-            },
-        ) { tag ->
-            Surface(
-                modifier = Modifier
-                    .padding(vertical = 4.dp)
-                    .clickable {
-                        activeTags.remove(tag)
-                    },
-                shape = RoundedCornerShape(20.dp),
-                color = MaterialTheme.colors.secondary.copy(alpha = 0.25f),
-                elevation = 0.dp,
-            ) {
-                Text(
-                    text = tag.label,
-                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
-                    style = MaterialTheme.typography.body2,
-                )
-            }
-        }
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .horizontalScroll(rememberScrollState()),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            tagPool.forEach { label ->
-                val already = activeTags.any { it.label == label }
-                Button(
-                    onClick = {
-                        if (!already) {
-                            activeTags.add(TagChip(nextTagId, label))
-                            nextTagId++
-                        }
-                    },
-                    enabled = !already,
-                ) {
-                    Text("+ $label")
-                }
-            }
-        }
-
-        Text(
-            text = stringResource(R.string.section_list),
+            text = stringResource(R.string.section_list_advanced),
             style = MaterialTheme.typography.subtitle2,
         )
         AnimatedColumn(
@@ -476,10 +525,8 @@ fun SampleListScreen() {
                     .fillMaxWidth()
                     .padding(vertical = 4.dp)
                     .graphicsLayer {
-                        // visibilityProgress tracks fade/slide only; placementProgress is row height when animated.
-                        val s = 0.9f + 0.1f * visibilityProgress
-                        scaleX = s
-                        scaleY = s
+                        scaleX = 0.9f + 0.1f * visibilityProgress
+                        scaleY = 0.9f + 0.1f * placementProgress
                     },
                 shape = RoundedCornerShape(12.dp),
                 elevation = 4.dp,
@@ -498,6 +545,14 @@ fun SampleListScreen() {
                         style = MaterialTheme.typography.caption,
                         color = MaterialTheme.colors.primary,
                     )
+                    if (phase != ItemPhase.Visible || progress < 1f) {
+                        LinearProgressIndicator(
+                            progress = progress.coerceIn(0f, 1f),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 8.dp),
+                        )
+                    }
                     if (phase != ItemPhase.Visible) {
                         Text(
                             text = stringResource(

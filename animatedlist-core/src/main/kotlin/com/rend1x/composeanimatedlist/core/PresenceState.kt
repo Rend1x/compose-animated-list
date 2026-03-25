@@ -1,9 +1,9 @@
-package com.rend1x.composeanimatedlist.state
+package com.rend1x.composeanimatedlist.core
 
 /**
  * Tracks lifecycle of an item inside the internal render list.
  */
-internal enum class PresenceState {
+enum class PresenceState {
     Entering,
     Present,
     Exiting,

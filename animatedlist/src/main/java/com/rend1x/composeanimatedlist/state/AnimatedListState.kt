@@ -7,6 +7,10 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import com.rend1x.composeanimatedlist.BuildConfig
+import com.rend1x.composeanimatedlist.core.AnimatedListItem
+import com.rend1x.composeanimatedlist.core.AnimatedListKeyPolicy
+import com.rend1x.composeanimatedlist.core.AnimatedListRenderEngine
 
 /**
  * Optional controller for [com.rend1x.composeanimatedlist.AnimatedColumn].
@@ -48,45 +52,40 @@ class AnimatedListState internal constructor() {
 fun rememberAnimatedListState(): AnimatedListState = remember { AnimatedListState() }
 
 /**
- * Holds internal render list for AnimatedColumn.
- * Render list may include exiting items that are not in the latest input anymore.
+ * Compose adapter around [AnimatedListRenderEngine]: mirrors engine snapshots into [mutableStateOf]
+ * for recomposition.
  */
 internal class AnimatedListRenderState<T>(
     initialItems: List<T>,
     keySelector: (T) -> Any,
 ) {
-    private val sanitizedInitialItems =
-        AnimatedListKeys.sanitizeAnimatedListInput(initialItems, keySelector)
+    private val keyPolicy =
+        if (BuildConfig.DEBUG) AnimatedListKeyPolicy.Strict else AnimatedListKeyPolicy.LastWins
 
-    var renderItems: List<AnimatedListItem<T>> by mutableStateOf(
-        value = sanitizedInitialItems.map { item ->
-            AnimatedListItem(
-                key = keySelector(item),
-                value = item,
-                presence = PresenceState.Present,
-            )
-        },
+    private val engine = AnimatedListRenderEngine(
+        initialItems = initialItems,
+        keySelector = keySelector,
+        keyPolicy = keyPolicy,
     )
+
+    var renderItems: List<AnimatedListItem<T>> by mutableStateOf(engine.items)
         private set
 
     fun update(
         items: List<T>,
         keySelector: (T) -> Any,
     ) {
-        renderItems = AnimatedListDiffer.diff(
-            current = renderItems,
-            newItems = items,
-            keySelector = keySelector,
-        )
+        engine.update(items = items, keySelector = keySelector)
+        renderItems = engine.items
     }
 
     fun onExitAnimationFinished(key: Any) {
-        renderItems = renderItems.filterNot { item ->
-            item.key == key && item.presence == PresenceState.Exiting
-        }
+        engine.onExitAnimationFinished(key)
+        renderItems = engine.items
     }
 
     fun clearExitingNow() {
-        renderItems = renderItems.filterNot { it.presence == PresenceState.Exiting }
+        engine.clearExitingNow()
+        renderItems = engine.items
     }
 }
