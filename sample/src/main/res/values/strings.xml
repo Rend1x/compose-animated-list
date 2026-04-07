@@ -13,7 +13,6 @@
     <string name="item_title">Item %1$d</string>
     <string name="status_entering">Entering</string>
     <string name="status_exiting">Exiting</string>
-    <string name="status_idle">Idle</string>
     <string name="status_visible">Visible</string>
     <string name="removing_label">Removing…</string>
     <string name="lifecycle_progress_debug">Visibility %1$.2f · Placement %2$.2f · Overall %3$.2f</string>
@@ -61,8 +60,6 @@
     <string name="remove_random">Remove random</string>
     <string name="remove_second">Remove 2nd</string>
     <string name="clear_exiting_now">Clear exiting now</string>
-
-    <string name="section_list">List</string>
 
     <string name="tag_remove_hint">Tap a chip to remove it. Use + buttons to add tags from the pool.</string>
 

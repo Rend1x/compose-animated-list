@@ -40,35 +40,6 @@ private const val PresentSettleDurationMillis = 120
 private const val ProgressEpsilon = 1e-4f
 
 /**
- * When a channel has finished its tween, we [Animatable.snapTo] exact rest targets. That is
- * intentional: it clears float drift from repeated interruptions and keeps the shell aligned with
- * discrete lifecycle boundaries. It runs only after a successful [coroutineScope] (not on
- * cancellation). Mid-flight continuity uses [Animatable.animateTo] from the **current** value—never
- * snap-to-initial at effect start; see class KDoc.
- */
-private suspend fun snapShellToVisibleRest(
-    alpha: Animatable<Float, *>,
-    translationY: Animatable<Float, *>,
-    sizeProgress: Animatable<Float, *>,
-) {
-    alpha.snapTo(1f)
-    translationY.snapTo(0f)
-    sizeProgress.snapTo(1f)
-}
-
-private suspend fun snapShellToExitRest(
-    alpha: Animatable<Float, *>,
-    translationY: Animatable<Float, *>,
-    sizeProgress: Animatable<Float, *>,
-    exit: ExitSpec,
-    density: Density,
-) {
-    alpha.snapTo(exit.targetAlpha)
-    translationY.snapTo(with(density) { exit.targetOffsetDp.toPx() })
-    sizeProgress.snapTo(0f)
-}
-
-/**
  * Column-based list with diff-driven enter/exit animations.
  *
  * The item [content] lambda receives [AnimatedItemScope]. Recommended: [animatedItem] on the row with
@@ -170,6 +141,13 @@ private fun <T> ColumnScope.AnimatedColumnItem(
     val density = LocalDensity.current
     val currentOnExitFinished by rememberUpdatedState(onExitFinished)
     val placement = transitionSpec.placement
+    val enterOffsetPx = remember(transitionSpec.enter, density) {
+        with(density) { transitionSpec.enter.initialOffsetDp.toPx() }
+    }
+    val exitOffsetPx = remember(transitionSpec.exit, density) {
+        with(density) { transitionSpec.exit.targetOffsetDp.toPx() }
+    }
+    val placementAnimated = remember(placement) { placement is PlacementBehavior.Animated }
 
     // Animatables are keyed only by [item.key] so they survive recomposition and [transitionSpec]
     // changes; initial values are captured on first composition for this key (see interruption KDoc).
@@ -252,9 +230,6 @@ private fun <T> ColumnScope.AnimatedColumnItem(
                 clip = true
             },
     ) {
-        val enterOffsetPx = with(density) { transitionSpec.enter.initialOffsetDp.toPx() }
-        val exitOffsetPx = with(density) { transitionSpec.exit.targetOffsetDp.toPx() }
-        val placementAnimated = transitionSpec.placement is PlacementBehavior.Animated
         val lifecycle = itemLifecycleProgress(
             presence = item.presence,
             enter = transitionSpec.enter,
@@ -382,6 +357,35 @@ private suspend fun animateExit(
         }
     }
     snapShellToExitRest(alpha, translationY, sizeProgress, exit, density)
+}
+
+/**
+ * When a channel has finished its tween, we [Animatable.snapTo] exact rest targets. That is
+ * intentional: it clears float drift from repeated interruptions and keeps the shell aligned with
+ * discrete lifecycle boundaries. It runs only after a successful [coroutineScope] (not on
+ * cancellation). Mid-flight continuity uses [Animatable.animateTo] from the **current** value—never
+ * snap-to-initial at effect start; see [AnimatedColumn] KDoc.
+ */
+private suspend fun snapShellToVisibleRest(
+    alpha: Animatable<Float, *>,
+    translationY: Animatable<Float, *>,
+    sizeProgress: Animatable<Float, *>,
+) {
+    alpha.snapTo(1f)
+    translationY.snapTo(0f)
+    sizeProgress.snapTo(1f)
+}
+
+private suspend fun snapShellToExitRest(
+    alpha: Animatable<Float, *>,
+    translationY: Animatable<Float, *>,
+    sizeProgress: Animatable<Float, *>,
+    exit: ExitSpec,
+    density: Density,
+) {
+    alpha.snapTo(exit.targetAlpha)
+    translationY.snapTo(with(density) { exit.targetOffsetDp.toPx() })
+    sizeProgress.snapTo(0f)
 }
 
 private fun PresenceState.toItemPhase(): ItemPhase = when (this) {
