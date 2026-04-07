@@ -29,7 +29,7 @@ class AnimatedColumnInterruptionInstrumentedTest {
     private data class Row(val id: String)
 
     @Test
-    fun `remove during entering transitions smoothly to exiting`() {
+    fun given_item_entering_when_removed_then_it_becomes_exiting() {
         var items by mutableStateOf(listOf(Row("a")))
         val longFade = 5_000
         val spec = AnimatedItemTransitionSpec(
@@ -67,7 +67,7 @@ class AnimatedColumnInterruptionInstrumentedTest {
     }
 
     @Test
-    fun `reinsert while exiting continues toward visible without restart`() {
+    fun given_item_exiting_when_reinserted_then_it_becomes_visible_without_restart() {
         var items by mutableStateOf(listOf(Row("a")))
         val longFade = 5_000
         val spec = AnimatedItemTransitionSpec(
@@ -105,7 +105,7 @@ class AnimatedColumnInterruptionInstrumentedTest {
     }
 
     @Test
-    fun `rapid add-remove-add stabilizes to latest state`() {
+    fun given_rapid_add_remove_add_when_sequence_applied_then_final_state_matches_latest() {
         var items by mutableStateOf(listOf(Row("a")))
         val spec = AnimatedItemTransitionSpec(
             enter = EnterSpec.Fade(300),
@@ -140,7 +140,7 @@ class AnimatedColumnInterruptionInstrumentedTest {
     }
 
     @Test
-    fun `changing transitionSpec mid-animation starts from current values`() {
+    fun given_animation_in_progress_when_transition_spec_changes_then_animation_continues_from_current_values() {
         var items by mutableStateOf(listOf(Row("a"), Row("b")))
         var useShortEnter by mutableStateOf(false)
         val longSpec = AnimatedItemTransitionSpec(
@@ -180,13 +180,12 @@ class AnimatedColumnInterruptionInstrumentedTest {
         composeRule.mainClock.autoAdvance = true
         composeRule.waitForIdle()
 
-        // Engine keeps a row Entering until the element value changes (see AnimatedListDiffer); shell
-        // can still be visually at rest after enter completes.
+        // Differ keeps new keys Entering until value changes; shell may already look settled.
         composeRule.onNodeWithTag("row-c").assertIsDisplayed().assertTextEquals("c:Entering")
     }
 
     @Test
-    fun `rapid key reuse does not reset animation values`() {
+    fun given_rapid_key_reuse_when_updates_applied_then_animation_state_is_not_reset() {
         var items by mutableStateOf(listOf(Row("a"), Row("b")))
         val spec = AnimatedItemTransitionSpec(
             enter = EnterSpec.Fade(4_000),
@@ -225,7 +224,7 @@ class AnimatedColumnInterruptionInstrumentedTest {
     }
 
     @Test
-    fun `reinserted item resumes from current visual state`() {
+    fun given_item_partially_exiting_when_reinserted_then_it_resumes_from_current_state() {
         var items by mutableStateOf(listOf(Row("a")))
         val spec = AnimatedItemTransitionSpec(
             enter = EnterSpec.Fade(600),

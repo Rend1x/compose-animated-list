@@ -14,13 +14,23 @@ class AnimatedListRenderEngineContractTest {
 
     private val key: (Row) -> String = { it.id }
 
-    @Test
-    fun identicalConsecutiveUpdates_areIdempotent() {
-        val engine = AnimatedListRenderEngine(
-            initialItems = listOf(Row("a", "0")),
+    private fun strictEngine(initialItems: List<Row> = emptyList()) =
+        AnimatedListRenderEngine(
+            initialItems = initialItems,
             keySelector = key,
             keyPolicy = AnimatedListKeyPolicy.Strict,
         )
+
+    private fun lastWinsEngine(initialItems: List<Row> = emptyList()) =
+        AnimatedListRenderEngine(
+            initialItems = initialItems,
+            keySelector = key,
+            keyPolicy = AnimatedListKeyPolicy.LastWins,
+        )
+
+    @Test
+    fun identicalConsecutiveUpdates_areIdempotent() {
+        val engine = strictEngine(listOf(Row("a", "0")))
         engine.update(listOf(Row("a", "1"), Row("b", "1")), key)
         fun snapshot() = engine.items.map { Triple(it.key, it.value, it.presence) }
         val afterFirst = snapshot()
@@ -32,11 +42,7 @@ class AnimatedListRenderEngineContractTest {
 
     @Test
     fun newlyAddedKey_isEntering() {
-        val engine = AnimatedListRenderEngine(
-            initialItems = listOf(Row("a", "1")),
-            keySelector = key,
-            keyPolicy = AnimatedListKeyPolicy.Strict,
-        )
+        val engine = strictEngine(listOf(Row("a", "1")))
         engine.update(listOf(Row("a", "1"), Row("b", "2")), key)
         val b = engine.items.first { it.key == "b" }
         assertEquals(PresenceState.Entering, b.presence)
@@ -45,11 +51,7 @@ class AnimatedListRenderEngineContractTest {
 
     @Test
     fun removedKey_isExiting_andRetainedUntilHandled() {
-        val engine = AnimatedListRenderEngine(
-            initialItems = listOf(Row("a", "1"), Row("b", "2")),
-            keySelector = key,
-            keyPolicy = AnimatedListKeyPolicy.Strict,
-        )
+        val engine = strictEngine(listOf(Row("a", "1"), Row("b", "2")))
         engine.update(listOf(Row("a", "1")), key)
         assertEquals(2, engine.items.size)
         val b = engine.items.first { it.key == "b" }
@@ -59,11 +61,7 @@ class AnimatedListRenderEngineContractTest {
 
     @Test
     fun `reinsert while exiting continues toward visible without restart`() {
-        val engine = AnimatedListRenderEngine(
-            initialItems = listOf(Row("a", "1")),
-            keySelector = key,
-            keyPolicy = AnimatedListKeyPolicy.Strict,
-        )
+        val engine = strictEngine(listOf(Row("a", "1")))
         engine.update(emptyList(), key)
         assertEquals(PresenceState.Exiting, engine.items.single { it.key == "a" }.presence)
 
@@ -75,11 +73,7 @@ class AnimatedListRenderEngineContractTest {
 
     @Test
     fun `remove during entering transitions smoothly to exiting`() {
-        val engine = AnimatedListRenderEngine(
-            initialItems = listOf(Row("a", "1")),
-            keySelector = key,
-            keyPolicy = AnimatedListKeyPolicy.Strict,
-        )
+        val engine = strictEngine(listOf(Row("a", "1")))
         engine.update(listOf(Row("a", "1"), Row("b", "2")), key)
         assertEquals(PresenceState.Entering, engine.items.first { it.key == "b" }.presence)
 
@@ -89,11 +83,7 @@ class AnimatedListRenderEngineContractTest {
 
     @Test
     fun `rapid add-remove-add stabilizes to latest state`() {
-        val engine = AnimatedListRenderEngine(
-            initialItems = listOf(Row("a", "1")),
-            keySelector = key,
-            keyPolicy = AnimatedListKeyPolicy.Strict,
-        )
+        val engine = strictEngine(listOf(Row("a", "1")))
         engine.update(emptyList(), key)
         engine.update(listOf(Row("a", "2")), key)
         engine.update(emptyList(), key)
@@ -109,11 +99,7 @@ class AnimatedListRenderEngineContractTest {
             engine.items.map { Triple(it.key, it.value.payload, it.presence) }
 
         fun stepped(): AnimatedListRenderEngine<Row> {
-            val engine = AnimatedListRenderEngine(
-                initialItems = listOf(Row("a", "0"), Row("b", "0")),
-                keySelector = key,
-                keyPolicy = AnimatedListKeyPolicy.Strict,
-            )
+            val engine = strictEngine(listOf(Row("a", "0"), Row("b", "0")))
             engine.update(
                 listOf(Row("a", "0"), Row("b", "0"), Row("c", "c")),
                 key,
@@ -134,11 +120,7 @@ class AnimatedListRenderEngineContractTest {
 
     @Test
     fun `repeated updates converge to stable final values`() {
-        val engine = AnimatedListRenderEngine(
-            initialItems = listOf(Row("a", "0"), Row("b", "0")),
-            keySelector = key,
-            keyPolicy = AnimatedListKeyPolicy.Strict,
-        )
+        val engine = strictEngine(listOf(Row("a", "0"), Row("b", "0")))
         repeat(100) {
             engine.update(
                 listOf(Row("a", "$it"), Row("b", "${it + 1}")),
@@ -155,14 +137,12 @@ class AnimatedListRenderEngineContractTest {
 
     @Test
     fun mixedRemoveAndInsert_producesDeterministicKeyOrder() {
-        val engine = AnimatedListRenderEngine(
-            initialItems = listOf(
+        val engine = strictEngine(
+            listOf(
                 Row("a", "a"),
                 Row("b", "b"),
                 Row("c", "c"),
             ),
-            keySelector = key,
-            keyPolicy = AnimatedListKeyPolicy.Strict,
         )
         engine.update(
             listOf(Row("a", "a"), Row("d", "d"), Row("c", "c")),
@@ -180,11 +160,7 @@ class AnimatedListRenderEngineContractTest {
 
     @Test
     fun clearExitingNow_removesOnlyExitingRows() {
-        val engine = AnimatedListRenderEngine(
-            initialItems = listOf(Row("a", "1"), Row("b", "2")),
-            keySelector = key,
-            keyPolicy = AnimatedListKeyPolicy.Strict,
-        )
+        val engine = strictEngine(listOf(Row("a", "1"), Row("b", "2")))
         engine.update(listOf(Row("a", "1")), key)
         engine.update(listOf(Row("a", "1"), Row("c", "3")), key)
 
@@ -197,11 +173,7 @@ class AnimatedListRenderEngineContractTest {
 
     @Test(expected = IllegalStateException::class)
     fun strictPolicy_duplicateKeysInUpdate_throw() {
-        val engine = AnimatedListRenderEngine(
-            initialItems = emptyList(),
-            keySelector = key,
-            keyPolicy = AnimatedListKeyPolicy.Strict,
-        )
+        val engine = strictEngine()
         engine.update(
             listOf(Row("x", "1"), Row("x", "2")),
             key,
@@ -210,20 +182,12 @@ class AnimatedListRenderEngineContractTest {
 
     @Test(expected = IllegalStateException::class)
     fun strictPolicy_duplicateKeysInInitialInput_throw() {
-        AnimatedListRenderEngine(
-            initialItems = listOf(Row("x", "1"), Row("x", "2")),
-            keySelector = key,
-            keyPolicy = AnimatedListKeyPolicy.Strict,
-        )
+        strictEngine(listOf(Row("x", "1"), Row("x", "2")))
     }
 
     @Test
     fun lastWinsPolicy_keepsLastValuePerKey_andStableSurvivorOrder() {
-        val engine = AnimatedListRenderEngine(
-            initialItems = emptyList(),
-            keySelector = key,
-            keyPolicy = AnimatedListKeyPolicy.LastWins,
-        )
+        val engine = lastWinsEngine()
         engine.update(
             listOf(
                 Row("a", "first"),
@@ -240,11 +204,7 @@ class AnimatedListRenderEngineContractTest {
 
     @Test
     fun lastWinsPolicy_duplicateKeysInSingleUpdate_yieldOneRowWithLastPayload() {
-        val engine = AnimatedListRenderEngine(
-            initialItems = listOf(Row("k", "0")),
-            keySelector = key,
-            keyPolicy = AnimatedListKeyPolicy.LastWins,
-        )
+        val engine = lastWinsEngine(listOf(Row("k", "0")))
         engine.update(
             listOf(Row("k", "1"), Row("k", "2")),
             key,
