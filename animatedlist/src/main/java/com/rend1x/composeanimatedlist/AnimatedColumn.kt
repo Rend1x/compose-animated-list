@@ -40,6 +40,35 @@ private const val PresentSettleDurationMillis = 120
 private const val ProgressEpsilon = 1e-4f
 
 /**
+ * When a channel has finished its tween, we [Animatable.snapTo] exact rest targets. That is
+ * intentional: it clears float drift from repeated interruptions and keeps the shell aligned with
+ * discrete lifecycle boundaries. It runs only after a successful [coroutineScope] (not on
+ * cancellation). Mid-flight continuity uses [Animatable.animateTo] from the **current** value—never
+ * snap-to-initial at effect start; see class KDoc.
+ */
+private suspend fun snapShellToVisibleRest(
+    alpha: Animatable<Float, *>,
+    translationY: Animatable<Float, *>,
+    sizeProgress: Animatable<Float, *>,
+) {
+    alpha.snapTo(1f)
+    translationY.snapTo(0f)
+    sizeProgress.snapTo(1f)
+}
+
+private suspend fun snapShellToExitRest(
+    alpha: Animatable<Float, *>,
+    translationY: Animatable<Float, *>,
+    sizeProgress: Animatable<Float, *>,
+    exit: ExitSpec,
+    density: Density,
+) {
+    alpha.snapTo(exit.targetAlpha)
+    translationY.snapTo(with(density) { exit.targetOffsetDp.toPx() })
+    sizeProgress.snapTo(0f)
+}
+
+/**
  * Column-based list with diff-driven enter/exit animations.
  *
  * The item [content] lambda receives [AnimatedItemScope]. Recommended: [animatedItem] on the row with
@@ -62,6 +91,28 @@ private const val ProgressEpsilon = 1e-4f
  *   the animation completes to its target in the same [LaunchedEffect] run, then exit completion runs.
  * - **Keys:** [key] must be unique within each [items] snapshot. Debug builds of this library fail
  *   fast with a clear error; release builds keep the last item per duplicated key (see README).
+ *
+ * ## Animation interruption semantics
+ *
+ * These rules apply when [items] or [transitionSpec] changes while a row’s shell animation is still
+ * in progress (see README **Animation interruption semantics**).
+ *
+ * - **Latest state wins:** After each applied update, render presence and element values match the
+ *   diff of the last committed [items] snapshot. Intermediate snapshots that never commit may be
+ *   skipped by composition.
+ * - **Continuity from current values:** When a running shell animation is replaced (presence change,
+ *   or a new [transitionSpec] / channel that restarts the effect), the next tween starts from the
+ *   **current** animated alpha, translation, and height progress—not from enter “initial” or other
+ *   implicit resets. Targets are always the values defined for the **new** step (enter toward visible,
+ *   exit toward off-screen, present-settle toward resting visible).
+ * - **Reinsert during [ItemPhase.Exiting]:** The engine marks the row [ItemPhase.Visible] (not
+ *   [ItemPhase.Entering]). The shell does not snap back to enter-start; it continues from current
+ *   animated values toward the visible resting targets (present-settle).
+ * - **Remove during [ItemPhase.Entering]:** The row becomes [ItemPhase.Exiting]. The shell animates
+ *   from **current** values toward exit targets. This is **not** a guaranteed literal reversal of the
+ *   enter curve; it is continuity toward the exit end state.
+ * - **Changing [transitionSpec] mid-animation:** The running effect restarts; new tweens start from
+ *   **current** values and run to the targets implied by the new spec and current presence.
  */
 @Composable
 fun <T> AnimatedColumn(
@@ -120,6 +171,8 @@ private fun <T> ColumnScope.AnimatedColumnItem(
     val currentOnExitFinished by rememberUpdatedState(onExitFinished)
     val placement = transitionSpec.placement
 
+    // Animatables are keyed only by [item.key] so they survive recomposition and [transitionSpec]
+    // changes; initial values are captured on first composition for this key (see interruption KDoc).
     val initialAlpha = remember(item.key) {
         when (item.presence) {
             PresenceState.Entering -> transitionSpec.enter.initialAlpha
@@ -137,14 +190,16 @@ private fun <T> ColumnScope.AnimatedColumnItem(
 
     val alpha = remember(item.key) { Animatable(initialAlpha) }
     val translationY = remember(item.key) { Animatable(initialOffsetPx) }
-    val initialSizeProgress = remember(item.key, placement) {
-        when {
+    val sizeProgress = remember(item.key) {
+        val initial = when {
             placement is PlacementBehavior.Animated && item.presence == PresenceState.Entering -> 0f
             else -> 1f
         }
+        Animatable(initial)
     }
-    val sizeProgress = remember(item.key) { Animatable(initialSizeProgress) }
 
+    // Keys include specs so a new transition runs when they change; continuity is preserved because
+    // [alpha], [translationY], and [sizeProgress] are not reset here—only post-completion snaps apply.
     LaunchedEffect(item.presence, transitionSpec.enter, transitionSpec.exit, placement) {
         listState.onAnimationStarted()
         try {
@@ -186,13 +241,13 @@ private fun <T> ColumnScope.AnimatedColumnItem(
             .layout { measurable, constraints ->
                 val placeable = measurable.measure(constraints)
                 val width = placeable.width
-                val height = (placeable.height * sizeProgress.value).roundToInt()
+                val height = (placeable.height * sizeProgress.value.coerceIn(0f, 1f)).roundToInt()
                 layout(width, height) {
                     placeable.placeRelative(0, 0)
                 }
             }
             .graphicsLayer {
-                this.alpha = alpha.value
+                this.alpha = alpha.value.coerceIn(0f, 1f)
                 this.translationY = translationY.value
                 clip = true
             },
@@ -228,13 +283,6 @@ private suspend fun animateEnter(
     enter: EnterSpec,
     placement: PlacementBehavior,
 ) {
-    alpha.snapTo(enter.initialAlpha)
-    translationY.snapTo(with(density) { enter.initialOffsetDp.toPx() })
-    if (placement is PlacementBehavior.Animated) {
-        sizeProgress.snapTo(0f)
-    } else {
-        sizeProgress.snapTo(1f)
-    }
     coroutineScope {
         launch {
             alpha.animateTo(
@@ -255,10 +303,17 @@ private suspend fun animateEnter(
                     animationSpec = tween(durationMillis = placement.durationMillis),
                 )
             } else {
-                sizeProgress.snapTo(1f)
+                // PlacementBehavior.None: no separate height channel, but the layout still scales
+                // by [sizeProgress]. Animate from the current value over the visibility duration so
+                // interruptions (e.g. animated → none spec swap) do not jump height.
+                sizeProgress.animateTo(
+                    targetValue = 1f,
+                    animationSpec = tween(durationMillis = enter.visibilityAnimationDurationMillis),
+                )
             }
         }
     }
+    snapShellToVisibleRest(alpha, translationY, sizeProgress)
 }
 
 private suspend fun animatePresentSettle(
@@ -286,6 +341,7 @@ private suspend fun animatePresentSettle(
             )
         }
     }
+    snapShellToVisibleRest(alpha, translationY, sizeProgress)
 }
 
 private suspend fun animateExit(
@@ -316,10 +372,16 @@ private suspend fun animateExit(
                     animationSpec = tween(durationMillis = placement.durationMillis),
                 )
             } else {
-                sizeProgress.snapTo(0f)
+                // Match visibility exit duration so height does not pop to 0 while fade/slide is
+                // still in flight (continuity when [sizeProgress] was mid-range from a prior spec).
+                sizeProgress.animateTo(
+                    targetValue = 0f,
+                    animationSpec = tween(durationMillis = exit.visibilityAnimationDurationMillis),
+                )
             }
         }
     }
+    snapShellToExitRest(alpha, translationY, sizeProgress, exit, density)
 }
 
 private fun PresenceState.toItemPhase(): ItemPhase = when (this) {
@@ -328,12 +390,13 @@ private fun PresenceState.toItemPhase(): ItemPhase = when (this) {
     PresenceState.Exiting -> ItemPhase.Exiting
 }
 
-private data class ItemLifecycleProgress(
+internal data class ItemLifecycleProgress(
     val visibilityProgress: Float,
     val placementProgress: Float,
 )
 
-private fun itemLifecycleProgress(
+/** Visible to JVM tests in this module ([ItemShellProgressBoundsTest]). */
+internal fun itemLifecycleProgress(
     presence: PresenceState,
     enter: EnterSpec,
     exit: ExitSpec,
@@ -380,7 +443,7 @@ private fun itemLifecycleProgress(
     }
 }
 
-private fun enteringVisibilityProgress(
+internal fun enteringVisibilityProgress(
     enter: EnterSpec,
     alpha: Float,
     translationY: Float,
@@ -402,7 +465,7 @@ private fun enteringVisibilityProgress(
     return minOf(fadeP, slideP)
 }
 
-private fun exitingVisibilityProgress(
+internal fun exitingVisibilityProgress(
     exit: ExitSpec,
     alpha: Float,
     translationY: Float,
@@ -424,13 +487,13 @@ private fun exitingVisibilityProgress(
     return minOf(fadeP, slideP)
 }
 
-private fun placementProgressValue(
+internal fun placementProgressValue(
     sizeProgress: Float,
     placementAnimated: Boolean,
 ): Float = if (placementAnimated) sizeProgress else 1f
 
 /** Enter: from [initialEnterOffsetPx] toward 0. */
-private fun slideProgressFromTranslation(
+internal fun slideProgressFromTranslation(
     translationY: Float,
     referenceOffsetPx: Float,
 ): Float {
@@ -440,7 +503,7 @@ private fun slideProgressFromTranslation(
 }
 
 /** Exit: from 0 toward [targetOffsetPx]. */
-private fun slideProgressTowardTarget(
+internal fun slideProgressTowardTarget(
     translationY: Float,
     targetOffsetPx: Float,
 ): Float {

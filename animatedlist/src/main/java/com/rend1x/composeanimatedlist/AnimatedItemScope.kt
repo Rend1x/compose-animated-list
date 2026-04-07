@@ -41,6 +41,17 @@ import androidx.compose.runtime.Immutable
  *
  * **Stability:** Rapid [items] updates follow README “Behavior guarantees” (exiting retention,
  * reinsertion without a second enter, ordering of applied diffs).
+ *
+ * ## Animation interruption semantics
+ *
+ * When [AnimatedColumn] applies a new [items] snapshot or a new [transitionSpec] while this row’s
+ * shell animation is still running, behavior follows [AnimatedColumn] KDoc and README **Animation
+ * interruption semantics**. In short: **latest committed [items] wins** for phase and value; shell
+ * tweens **continue from current animated values** toward the target for the new step. Reinsertion
+ * during [ItemPhase.Exiting] does **not** restart as [ItemPhase.Entering]. Removal during
+ * [ItemPhase.Entering] moves to [ItemPhase.Exiting] by animating from **current** values toward exit
+ * targets—there is **no** guarantee that motion is a literal reversal of the enter animation, only
+ * continuity toward the new targets.
  */
 @Immutable
 interface AnimatedItemScope {

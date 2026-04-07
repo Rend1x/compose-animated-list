@@ -58,7 +58,7 @@ class AnimatedListRenderEngineContractTest {
     }
 
     @Test
-    fun reinsertWhileExiting_becomesPresentWithLatestValue_notEntering() {
+    fun `reinsert while exiting continues toward visible without restart`() {
         val engine = AnimatedListRenderEngine(
             initialItems = listOf(Row("a", "1")),
             keySelector = key,
@@ -71,6 +71,86 @@ class AnimatedListRenderEngineContractTest {
         val a = engine.items.single { it.key == "a" }
         assertEquals(PresenceState.Present, a.presence)
         assertEquals("fresh", a.value.payload)
+    }
+
+    @Test
+    fun `remove during entering transitions smoothly to exiting`() {
+        val engine = AnimatedListRenderEngine(
+            initialItems = listOf(Row("a", "1")),
+            keySelector = key,
+            keyPolicy = AnimatedListKeyPolicy.Strict,
+        )
+        engine.update(listOf(Row("a", "1"), Row("b", "2")), key)
+        assertEquals(PresenceState.Entering, engine.items.first { it.key == "b" }.presence)
+
+        engine.update(listOf(Row("a", "1")), key)
+        assertEquals(PresenceState.Exiting, engine.items.first { it.key == "b" }.presence)
+    }
+
+    @Test
+    fun `rapid add-remove-add stabilizes to latest state`() {
+        val engine = AnimatedListRenderEngine(
+            initialItems = listOf(Row("a", "1")),
+            keySelector = key,
+            keyPolicy = AnimatedListKeyPolicy.Strict,
+        )
+        engine.update(emptyList(), key)
+        engine.update(listOf(Row("a", "2")), key)
+        engine.update(emptyList(), key)
+        engine.update(listOf(Row("a", "3")), key)
+        val a = engine.items.single { it.key == "a" }
+        assertEquals(PresenceState.Present, a.presence)
+        assertEquals("3", a.value.payload)
+    }
+
+    @Test
+    fun `multiple rapid updates produce deterministic final snapshot`() {
+        fun snapshot(engine: AnimatedListRenderEngine<Row>): List<Triple<Any, String, PresenceState>> =
+            engine.items.map { Triple(it.key, it.value.payload, it.presence) }
+
+        fun stepped(): AnimatedListRenderEngine<Row> {
+            val engine = AnimatedListRenderEngine(
+                initialItems = listOf(Row("a", "0"), Row("b", "0")),
+                keySelector = key,
+                keyPolicy = AnimatedListKeyPolicy.Strict,
+            )
+            engine.update(
+                listOf(Row("a", "0"), Row("b", "0"), Row("c", "c")),
+                key,
+            )
+            engine.update(listOf(Row("a", "0"), Row("c", "c")), key)
+            engine.onExitAnimationFinished("b")
+            engine.update(
+                listOf(Row("a", "0"), Row("b", "new"), Row("c", "c")),
+                key,
+            )
+            return engine
+        }
+
+        val first = snapshot(stepped())
+        val second = snapshot(stepped())
+        assertEquals(first, second)
+    }
+
+    @Test
+    fun `repeated updates converge to stable final values`() {
+        val engine = AnimatedListRenderEngine(
+            initialItems = listOf(Row("a", "0"), Row("b", "0")),
+            keySelector = key,
+            keyPolicy = AnimatedListKeyPolicy.Strict,
+        )
+        repeat(100) {
+            engine.update(
+                listOf(Row("a", "$it"), Row("b", "${it + 1}")),
+                key,
+            )
+        }
+        val a = engine.items.first { it.key == "a" }
+        val b = engine.items.first { it.key == "b" }
+        assertEquals(PresenceState.Present, a.presence)
+        assertEquals(PresenceState.Present, b.presence)
+        assertEquals("99", a.value.payload)
+        assertEquals("100", b.value.payload)
     }
 
     @Test
