@@ -68,6 +68,18 @@ These rules are what the implementation and tests commit to—use them when reas
 | **Update ordering** | Each time `items` or `key` changes, the list diffs **from the previous internal render snapshot** to the new `items`. Rapid updates are applied in **composition order**: the `LaunchedEffect` tied to `items` restarts, so intermediate `items` values may be skipped if the composition never commits them, but every applied step is a well-formed diff. The final render state matches the last applied `items` snapshot. |
 | **Keys / duplicates** | `key` must return a **unique** value for every element in `items` for that snapshot. **Debug** builds of the `animatedlist` AAR validate this and throw `IllegalStateException` with the conflicting indices. **Release** builds do not throw: duplicates are normalized by keeping the **last** occurrence of each key; sanitized order is **increasing index of that last occurrence** (see **Behavior contract**). Fix callers so debug and release agree. |
 
+### Animation interruption semantics
+
+Rules for rapid `items` updates and `transitionSpec` changes while row shell animations are in flight. Stated here and in KDoc on [`AnimatedColumn`](animatedlist/src/main/java/com/rend1x/composeanimatedlist/AnimatedColumn.kt) / [`AnimatedItemScope`](animatedlist/src/main/java/com/rend1x/composeanimatedlist/AnimatedItemScope.kt). **Core:** `AnimatedListRenderEngineContractTest` (phase/value snapshots). **Adapter:** `AnimatedColumnInterruptionInstrumentedTest` (phases under a frozen main clock, spec swap, and multi-frame rapid updates).
+
+| Rule | Meaning |
+|------|--------|
+| **Latest state wins** | After each applied update, each row’s **phase** and **element value** match the diff of the **last committed** `items` snapshot. Snapshots that never commit may be skipped. |
+| **Continuity from current values** | When a shell animation is interrupted (presence changes, or `transitionSpec` restarts the effect), the next animation runs from the **current** animated alpha, translation, and height progress—**not** from enter “initial” values. Targets come from the **new** step: enter toward on-screen rest, exit toward off-screen rest, visible row toward rest after present-settle. |
+| **Reinsert during Exiting** | The row becomes **Visible** with the latest value (**not** Entering again). The shell does **not** reset to enter-start; it moves from **current** values toward visible rest (present-settle). |
+| **Remove during Entering** | The row becomes **Exiting**. The shell animates from **current** values toward exit targets. There is **no** guarantee of a literal **reverse** of the enter curve—only continuity **toward** the exit end state. |
+| **Changing `transitionSpec` mid-animation** | The animation effect restarts; tweens begin from **current** values and run to targets implied by the new spec and current phase. |
+
 ### Transition presets
 
 ```kotlin
@@ -82,7 +94,7 @@ AnimatedItemDefaults.fadeSlide() // column-owned motion; avoid stacking animated
 ## Modules
 
 - **`animatedlist-core`** — JVM-only diff/render engine (`AnimatedListRenderEngine`, `AnimatedListDiffer`); no Compose
-- **`animatedlist`** — Compose UI adapter over `animatedlist-core`
+- **`animatedlist`** — Compose UI adapter over `animatedlist-core` (minSdk **23**; current Compose Material and merged AndroidTest manifests require it)
 - **`sample`** — easy path (`none` + `animatedItem`) vs advanced (tunable `transitionSpec` + phase/progress)
 
 ### Behavior contract (`animatedlist-core`)
