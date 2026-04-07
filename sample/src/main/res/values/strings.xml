@@ -65,4 +65,17 @@
     <string name="section_list">List</string>
 
     <string name="tag_remove_hint">Tap a chip to remove it. Use + buttons to add tags from the pool.</string>
+
+    <string name="section_interruption_stress">Interruption stress (rapid updates)</string>
+    <string name="interruption_stress_hint">Spam add/remove, toggle a fixed key, random / ~16 ms ultra-fast / same-key burst loops, or show shell progress. Expect continuous motion: no snap back to enter-start on reinsert, no flicker when interrupting enter with remove. Mirrored list uses none() + animatedItem for the same data.</string>
+    <string name="interruption_stress_spam">Spam updates</string>
+    <string name="interruption_stress_toggle_keyed">Toggle item #1</string>
+    <string name="interruption_stress_random_loop">Random insert/remove loop</string>
+    <string name="interruption_stress_ultra_fast_loop">Ultra-fast loop (~16 ms)</string>
+    <string name="interruption_stress_same_key_burst">Burst toggle item #1 (~16 ms)</string>
+    <string name="interruption_stress_show_shell_debug">Show shell progress (column spec)</string>
+    <string name="interruption_stress_shell_debug">Shell: vis %1$.3f · place %2$.3f · min %3$.3f</string>
+    <string name="interruption_stress_row_title">Stress item %1$d</string>
+    <string name="interruption_stress_none_path_caption">Same items: modifier-first (none + animatedItem)</string>
+    <string name="interruption_stress_mirror_row">#%1$d (modifier path)</string>
 </resources>

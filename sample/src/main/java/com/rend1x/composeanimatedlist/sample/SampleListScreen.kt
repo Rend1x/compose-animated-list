@@ -145,6 +145,8 @@ fun SampleListScreen() {
             style = MaterialTheme.typography.h6,
         )
 
+        InterruptionStressSection()
+
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
