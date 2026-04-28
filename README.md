@@ -97,6 +97,43 @@ AnimatedItemDefaults.fadeSlide() // column-owned motion; avoid stacking animated
 - **`animatedlist`** — Compose UI adapter over `animatedlist-core` (minSdk **23**; current Compose Material and merged AndroidTest manifests require it)
 - **`sample`** — easy path (`none` + `animatedItem`) vs advanced (tunable `transitionSpec` + phase/progress)
 
+## Benchmarks
+
+Use the core benchmark runner when you want to estimate the raw overhead of the diff/render engine before layering Compose animation and drawing on top:
+
+```bash
+./gradlew :animatedlist-core:runBenchmarks
+./gradlew :animatedlist-core:runBenchmarks --args="--profile=full"
+```
+
+What it measures:
+
+- **`rebuild-present`** — rebuild a plain present-only render snapshot for each update
+- **`diff+clear`** — run [`AnimatedListDiffer.diff`](animatedlist-core/src/main/kotlin/com/rend1x/composeanimatedlist/core/AnimatedListDiffer.kt) and immediately clear exiting rows
+- **`engine.update+clear`** — run [`AnimatedListRenderEngine.update`](animatedlist-core/src/main/kotlin/com/rend1x/composeanimatedlist/core/AnimatedListRenderEngine.kt) with the same immediate-clear policy
+
+The workloads cover fixed-size window churn, random insert/remove/update churn, reinsert bursts on hot keys, and pure value updates across stable keys.
+
+The report includes:
+
+- **Cost metrics** — median and p90 **nanoseconds per update** plus a ratio against the plain rebuild baseline
+- **Input churn metrics** — insert/remove/position-change/value-change counts and average touched keys per update
+- **Animation-value metrics** — exit events, updates that keep exiting rows alive, reinsert recoveries without re-enter, and render-size amplification from retained exits
+
+These numbers are intentionally **engine-only**. They answer “how expensive is the diff/lifecycle logic itself?” If you want to measure scroll smoothness, frame time, or jank in the sample/app process, add a separate Android macrobenchmark layer on top.
+
+### UI comparison baseline
+
+There is also an on-device comparison suite in [`sample/src/androidTest`](sample/src/androidTest/java/com/rend1x/composeanimatedlist/sample/ListAnimationComparisonBenchmark.kt) for comparing:
+
+- **`AnimatedColumn`** with the recommended `none() + animatedItem(...)` path
+- **`Column`** with the closest built-in baseline: `animateContentSize()`
+- **`LazyColumn`** with the built-in item animation path: `animateItem()`
+
+Use this when the question is not just “what does the core engine cost?” but also “how does this compare to the default Compose list animation building blocks on-device?” The suite measures `update -> waitForIdle()` timings and logs median/p90 results for each implementation on the device or emulator.
+
+The `Column` baseline is intentionally not apples-to-apples: Compose does not provide a built-in diff-driven keyed item animation primitive for plain `Column`, so `animateContentSize()` is the nearest default baseline rather than a full feature match.
+
 ### Behavior contract (`animatedlist-core`)
 
 These are the engine-level guarantees enforced by `AnimatedListRenderEngine` / `AnimatedListDiffer` and covered by `AnimatedListRenderEngineContractTest`:
@@ -113,4 +150,3 @@ These are the engine-level guarantees enforced by `AnimatedListRenderEngine` / `
 | **Last-wins keys** | Duplicates collapse to the **last** occurrence per key; sanitized order is by **increasing index of that last occurrence** in the original list. |
 
 Compose timing (`LaunchedEffect`, animation frames) is layered on top; see **Behavior guarantees** above for UI-facing rules.
-
