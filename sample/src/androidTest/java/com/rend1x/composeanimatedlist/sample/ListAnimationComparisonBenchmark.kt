@@ -2,6 +2,7 @@ package com.rend1x.composeanimatedlist.sample
 
 import android.util.Log
 import androidx.activity.compose.setContent
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -27,6 +28,13 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.rend1x.composeanimatedlist.AnimatedColumn
 import com.rend1x.composeanimatedlist.animatedItem
 import com.rend1x.composeanimatedlist.animation.AnimatedItemDefaults
+import com.rend1x.composeanimatedlist.animation.AnimatedItemTransitionSpec
+import com.rend1x.composeanimatedlist.animation.EnterSpec
+import com.rend1x.composeanimatedlist.animation.ExitSpec
+import com.rend1x.composeanimatedlist.animation.PlacementBehavior
+import com.rend1x.composeanimatedlist.core.AnimatedListKeyPolicy
+import com.rend1x.composeanimatedlist.core.AnimatedListRenderEngine
+import com.rend1x.composeanimatedlist.core.PresenceState
 import kotlin.math.ceil
 import kotlin.random.Random
 import org.junit.Rule
@@ -42,10 +50,13 @@ class ListAnimationComparisonBenchmark {
     @Test
     fun compareWindowedChurn() {
         val workload = windowedChurnWorkload(initialSize = 64, steps = 60)
-        logScenarioResults(
-            scenarioName = "windowed-churn",
-            results = measureAllImplementations(workload),
-        )
+        AnimationProfile.entries.forEach { profile ->
+            logScenarioResults(
+                scenarioName = "windowed-churn",
+                profile = profile,
+                results = measureAllImplementations(workload, profile),
+            )
+        }
     }
 
     @Test
@@ -56,25 +67,33 @@ class ListAnimationComparisonBenchmark {
             hotSetSize = 8,
             seed = 9_001,
         )
-        logScenarioResults(
-            scenarioName = "reinsert-burst",
-            results = measureAllImplementations(workload),
-        )
+        AnimationProfile.entries.forEach { profile ->
+            logScenarioResults(
+                scenarioName = "reinsert-burst",
+                profile = profile,
+                results = measureAllImplementations(workload, profile),
+            )
+        }
     }
 
-    private fun measureAllImplementations(workload: UiWorkload): List<UiScenarioResult> = listOf(
-        measureScenario(ComparisonImplementation.AnimatedColumn, workload),
-        measureScenario(ComparisonImplementation.DefaultColumn, workload),
-        measureScenario(ComparisonImplementation.LazyColumn, workload),
+    private fun measureAllImplementations(
+        workload: UiWorkload,
+        profile: AnimationProfile,
+    ): List<UiScenarioResult> = listOf(
+        measureScenario(ComparisonImplementation.AnimatedColumn, profile, workload),
+        measureScenario(ComparisonImplementation.DefaultColumn, profile, workload),
+        measureScenario(ComparisonImplementation.LazyColumn, profile, workload),
     )
 
     private fun measureScenario(
         implementation: ComparisonImplementation,
+        profile: AnimationProfile,
         workload: UiWorkload,
-        warmupRuns: Int = 2,
-        measuredRuns: Int = 5,
+        warmupRuns: Int = 1,
+        measuredRuns: Int = 3,
     ): UiScenarioResult {
         val samples = ArrayList<Double>(measuredRuns)
+        val semanticMetrics = semanticMetricsFor(implementation, workload)
 
         repeat(warmupRuns + measuredRuns) { run ->
             lateinit var controller: WorkloadController
@@ -86,6 +105,7 @@ class ListAnimationComparisonBenchmark {
                         Surface(color = Color(0xFFF5F5F5)) {
                             ComparisonHost(
                                 implementation = implementation,
+                                profile = profile,
                                 items = controller.items,
                             )
                         }
@@ -119,17 +139,20 @@ class ListAnimationComparisonBenchmark {
         val sorted = samples.sorted()
         return UiScenarioResult(
             implementation = implementation,
+            profile = profile,
             medianNsPerUpdate = percentile(sorted, 0.5),
             p90NsPerUpdate = percentile(sorted, 0.9),
+            semanticMetrics = semanticMetrics,
         )
     }
 
     private fun logScenarioResults(
         scenarioName: String,
+        profile: AnimationProfile,
         results: List<UiScenarioResult>,
     ) {
         val baseline = results.first { it.implementation == ComparisonImplementation.AnimatedColumn }
-        Log.i(LOG_TAG, "Scenario=$scenarioName")
+        Log.i(LOG_TAG, "Scenario=$scenarioName profile=${profile.label}")
         results.forEach { result ->
             Log.i(
                 LOG_TAG,
@@ -141,6 +164,18 @@ class ListAnimationComparisonBenchmark {
                     append(formatNs(result.p90NsPerUpdate))
                     append(" ratioVsAnimatedColumn=")
                     append(formatRatio(result.medianNsPerUpdate / baseline.medianNsPerUpdate))
+                    append(" semanticMode=")
+                    append(result.semanticMetrics.mode)
+                    append(" reinsertsRecovered=")
+                    append(result.semanticMetrics.reinsertsRecovered)
+                    append(" updatesWithExits=")
+                    append(result.semanticMetrics.updatesWithExits)
+                    append(" avgExtraRows=")
+                    append(formatDouble(result.semanticMetrics.avgExtraRows))
+                    append(" maxExtraRows=")
+                    append(result.semanticMetrics.maxExtraRows)
+                    append(" avgAmplification=")
+                    append(formatRatio(result.semanticMetrics.avgAmplification))
                 },
             )
         }
@@ -159,14 +194,32 @@ private data class UiWorkload(
 
 private data class UiScenarioResult(
     val implementation: ComparisonImplementation,
+    val profile: AnimationProfile,
     val medianNsPerUpdate: Double,
     val p90NsPerUpdate: Double,
+    val semanticMetrics: UiSemanticMetrics,
+)
+
+private data class UiSemanticMetrics(
+    val mode: String,
+    val reinsertsRecovered: Int,
+    val updatesWithExits: Int,
+    val avgExtraRows: Double,
+    val maxExtraRows: Int,
+    val avgAmplification: Double,
 )
 
 private class WorkloadController(
     workload: UiWorkload,
 ) {
     var items by mutableStateOf(workload.initialItems)
+}
+
+private enum class AnimationProfile(
+    val label: String,
+) {
+    Default("default"),
+    Fast("fast"),
 }
 
 private enum class ComparisonImplementation(
@@ -180,23 +233,44 @@ private enum class ComparisonImplementation(
 @Composable
 private fun ComparisonHost(
     implementation: ComparisonImplementation,
+    profile: AnimationProfile,
     items: List<UiRow>,
 ) {
     when (implementation) {
         ComparisonImplementation.AnimatedColumn -> {
-            AnimatedColumn(
-                items = items,
-                key = { it.id },
-                transitionSpec = AnimatedItemDefaults.none(),
-                modifier = Modifier.fillMaxWidth(),
-            ) { row ->
-                BenchmarkRowCard(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 12.dp, vertical = 4.dp)
-                        .animatedItem(this),
-                    row = row,
-                )
+            when (profile) {
+                AnimationProfile.Default -> {
+                    AnimatedColumn(
+                        items = items,
+                        key = { it.id },
+                        transitionSpec = AnimatedItemDefaults.none(),
+                        modifier = Modifier.fillMaxWidth(),
+                    ) { row ->
+                        BenchmarkRowCard(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 12.dp, vertical = 4.dp)
+                                .animatedItem(this),
+                            row = row,
+                        )
+                    }
+                }
+
+                AnimationProfile.Fast -> {
+                    AnimatedColumn(
+                        items = items,
+                        key = { it.id },
+                        transitionSpec = FAST_ANIMATED_COLUMN_SPEC,
+                        modifier = Modifier.fillMaxWidth(),
+                    ) { row ->
+                        BenchmarkRowCard(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 12.dp, vertical = 4.dp),
+                            row = row,
+                        )
+                    }
+                }
             }
         }
 
@@ -204,7 +278,12 @@ private fun ComparisonHost(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .animateContentSize(),
+                    .animateContentSize(
+                        animationSpec = when (profile) {
+                            AnimationProfile.Default -> tween()
+                            AnimationProfile.Fast -> tween(FAST_DURATION_MS)
+                        },
+                    ),
             ) {
                 items.forEach { row ->
                     key(row.id) {
@@ -227,7 +306,20 @@ private fun ComparisonHost(
                 ) { row ->
                     BenchmarkRowCard(
                         modifier = Modifier
-                            .animateItem()
+                            .animateItem(
+                                fadeInSpec = when (profile) {
+                                    AnimationProfile.Default -> tween()
+                                    AnimationProfile.Fast -> tween(FAST_DURATION_MS)
+                                },
+                                placementSpec = when (profile) {
+                                    AnimationProfile.Default -> tween()
+                                    AnimationProfile.Fast -> tween(FAST_DURATION_MS)
+                                },
+                                fadeOutSpec = when (profile) {
+                                    AnimationProfile.Default -> tween()
+                                    AnimationProfile.Fast -> tween(FAST_DURATION_MS)
+                                },
+                            )
                             .fillMaxWidth()
                             .padding(horizontal = 12.dp, vertical = 4.dp),
                         row = row,
@@ -358,5 +450,98 @@ private fun percentile(
 private fun formatNs(value: Double): String = "%,.1f".format(value)
 
 private fun formatRatio(value: Double): String = "%.2fx".format(value)
+
+private fun formatDouble(value: Double): String = "%,.2f".format(value)
+
+private fun semanticMetricsFor(
+    implementation: ComparisonImplementation,
+    workload: UiWorkload,
+): UiSemanticMetrics = when (implementation) {
+    ComparisonImplementation.AnimatedColumn -> retainedExitMetrics(workload, exitRetentionUpdates = 3)
+    ComparisonImplementation.DefaultColumn,
+    ComparisonImplementation.LazyColumn,
+    -> UiSemanticMetrics(
+        mode = "present-only",
+        reinsertsRecovered = 0,
+        updatesWithExits = 0,
+        avgExtraRows = 0.0,
+        maxExtraRows = 0,
+        avgAmplification = 1.0,
+    )
+}
+
+private fun retainedExitMetrics(
+    workload: UiWorkload,
+    exitRetentionUpdates: Int,
+): UiSemanticMetrics {
+    val engine = AnimatedListRenderEngine(
+        initialItems = workload.initialItems,
+        keySelector = UiRow::id,
+        keyPolicy = AnimatedListKeyPolicy.Strict,
+    )
+    val exitRetention = linkedMapOf<Int, Int>()
+    var reinsertsRecovered = 0
+    var updatesWithExits = 0
+    var totalExtraRows = 0.0
+    var maxExtraRows = 0
+    var totalAmplification = 0.0
+
+    workload.updates.forEach { nextItems ->
+        val finishingKeys = exitRetention
+            .filterValues { remaining -> remaining <= 0 }
+            .keys
+            .toList()
+        finishingKeys.forEach { key ->
+            engine.onExitAnimationFinished(key)
+            exitRetention.remove(key)
+        }
+        exitRetention.replaceAll { _, remaining -> remaining - 1 }
+
+        val exitingBefore = engine.items
+            .filter { it.presence == PresenceState.Exiting }
+            .mapTo(linkedSetOf()) { it.key as Int }
+
+        engine.update(nextItems, UiRow::id)
+
+        val renderByKey = engine.items.associateBy { it.key as Int }
+        val exitingAfter = engine.items
+            .filter { it.presence == PresenceState.Exiting }
+            .mapTo(linkedSetOf()) { it.key as Int }
+
+        val newlyExiting = exitingAfter - exitingBefore
+        newlyExiting.forEach { key ->
+            exitRetention[key] = exitRetentionUpdates
+        }
+
+        reinsertsRecovered += exitingBefore.count { key ->
+            renderByKey[key]?.presence == PresenceState.Present
+        }
+
+        if (exitingAfter.isNotEmpty()) {
+            updatesWithExits++
+        }
+        val extraRows = (engine.items.size - nextItems.size).coerceAtLeast(0)
+        totalExtraRows += extraRows
+        maxExtraRows = maxOf(maxExtraRows, extraRows)
+        totalAmplification += engine.items.size.toDouble() / maxOf(nextItems.size, 1)
+    }
+
+    return UiSemanticMetrics(
+        mode = "retained-exits",
+        reinsertsRecovered = reinsertsRecovered,
+        updatesWithExits = updatesWithExits,
+        avgExtraRows = totalExtraRows / workload.updates.size,
+        maxExtraRows = maxExtraRows,
+        avgAmplification = totalAmplification / workload.updates.size,
+    )
+}
+
+private val FAST_ANIMATED_COLUMN_SPEC = AnimatedItemTransitionSpec(
+    enter = EnterSpec.FadeAndSlide(durationMillis = FAST_DURATION_MS),
+    exit = ExitSpec.FadeAndSlide(durationMillis = FAST_DURATION_MS),
+    placement = PlacementBehavior.Animated(durationMillis = FAST_DURATION_MS),
+)
+
+private const val FAST_DURATION_MS = 32
 
 private const val LOG_TAG = "ListAnimCompare"

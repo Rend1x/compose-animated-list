@@ -17,13 +17,18 @@ class MainActivity : ComponentActivity() {
         AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags("en"))
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        val benchmarkScenario = intent.toBenchmarkScenarioOrNull()
         setContent {
             MaterialTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = Color(0xFFF5F5F5),
                 ) {
-                    SampleListScreen()
+                    if (benchmarkScenario == null) {
+                        SampleListScreen()
+                    } else {
+                        BenchmarkScenarioScreen(benchmarkScenario)
+                    }
                 }
             }
         }
