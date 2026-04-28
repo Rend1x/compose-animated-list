@@ -109,7 +109,7 @@ class ListAnimationMacrobenchmark {
         benchmarkRule.measureRepeated(
             packageName = TARGET_PACKAGE,
             metrics = listOf(FrameTimingMetric()),
-            iterations = 3,
+            iterations = 7,
             compilationMode = CompilationMode.None(),
             setupBlock = {
                 pressHome()

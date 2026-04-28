@@ -134,6 +134,54 @@ Use this when the question is not just “what does the core engine cost?” but
 
 The `Column` baseline is intentionally not apples-to-apples: Compose does not provide a built-in diff-driven keyed item animation primitive for plain `Column`, so `animateContentSize()` is the nearest default baseline rather than a full feature match.
 
+### Macrobenchmark (frame metrics)
+
+For frame-time and jank-tail analysis on a real device, run macrobenchmarks:
+
+```bash
+ANDROID_SERIAL=<device-id> ./gradlew :macrobenchmark:connectedBenchmarkAndroidTest \
+  -Pandroid.testInstrumentationRunnerArguments.class=com.rend1x.composeanimatedlist.macrobenchmark.ListAnimationMacrobenchmark
+```
+
+Current macro suite configuration:
+
+- `FrameTimingMetric()` only (focus on frame behavior during churn scenarios)
+- `CompilationMode.None()`
+- `repeatIterations = 7`
+- deterministic scenario launch via benchmark extras (`implementation`, `workload`, `profile`)
+
+Results are exported to:
+
+- `macrobenchmark/build/outputs/connected_android_test_additional_output/benchmark/connected/.../com.rend1x.composeanimatedlist.macrobenchmark-benchmarkData.json`
+- `macrobenchmark/build/outputs/connected_android_test_additional_output/benchmark/connected/.../additionaltestoutput.benchmark.message_*.txt`
+
+### Benchmark interpretation (important)
+
+This project should be evaluated as a **specialized semantic tool**, not as a universal “fastest list animation” replacement.
+
+- Core runner answers: “what does diff/lifecycle logic cost?”
+- UI comparison runner answers: “what does `update -> waitForIdle()` cost versus default Compose paths?”
+- Macrobenchmark answers: “what frame tails (`P90/P95/P99`) do users pay under churn?”
+
+Use all three layers together. For this library, semantic metrics such as reinsert recovery and controlled exit retention are first-class outcomes and should be interpreted alongside frame tails.
+
+### Latest on-device snapshot (Pixel 7, API 36, `repeatIterations = 7`)
+
+`P90 frameDurationCpuMs / P90 frameOverrunMs`:
+
+| Scenario | AnimatedColumn | Column baseline | LazyColumn baseline |
+|--------|--------|--------|--------|
+| `reinsert / fast` | `110.8 / 110.4` | `65.1 / 81.9` | `85.7 / 103.7` |
+| `reinsert / default` | `135.4 / 121.9` | `94.1 / 107.8` | `74.7 / 85.4` |
+| `windowed / fast` | `109.5 / 97.4` | `80.9 / 91.7` | `78.5 / 95.1` |
+| `windowed / default` | `85.6 / 96.3` | `81.2 / 78.7` | `102.4 / 87.6` |
+
+Notes:
+
+- Median (`P50`) frame duration is close across implementations (roughly `4-5 ms`); differences are mostly in tail latency.
+- `cpuLocked=false` in these runs, so treat absolute values as comparative, not lab-grade.
+- Practical takeaway: the library is strongest when semantic guarantees matter (reinsert continuity, controlled exiting lifecycle), not when optimizing for minimum tail latency at all costs.
+
 ### Behavior contract (`animatedlist-core`)
 
 These are the engine-level guarantees enforced by `AnimatedListRenderEngine` / `AnimatedListDiffer` and covered by `AnimatedListRenderEngineContractTest`:
