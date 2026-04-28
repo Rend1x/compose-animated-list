@@ -6,10 +6,9 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Surface
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.core.os.LocaleListCompat
 
 class MainActivity : ComponentActivity() {
@@ -19,10 +18,10 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         val benchmarkScenario = intent.toBenchmarkScenarioOrNull()
         setContent {
-            MaterialTheme {
+            SampleTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
-                    color = Color(0xFFF5F5F5),
+                    color = MaterialTheme.colorScheme.background,
                 ) {
                     if (benchmarkScenario == null) {
                         SampleListScreen()

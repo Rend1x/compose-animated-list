@@ -2,8 +2,16 @@
 <resources>
     <string name="app_name">Animated list sample</string>
     <string name="screen_heading">AnimatedColumn playground</string>
+    <string name="screen_heading_short">AnimatedColumn</string>
     <string name="screen_subheading">Examples are split into separate pages so each screen stays shorter and easier to explore.</string>
+    <string name="menu_pages_title">Pages</string>
+    <string name="menu_open">Open pages menu</string>
+    <string name="current_page_label">Current: %1$s</string>
+    <string name="menu_drawer_title">AnimatedColumn Demo</string>
+    <string name="menu_drawer_subtitle">Lifecycle-focused pages for screenshots and video capture.</string>
+    <string name="menu_navigation_label">Navigation</string>
     <string name="page_basics">Basics</string>
+    <string name="page_semantics">Semantics</string>
     <string name="page_advanced">Advanced</string>
     <string name="page_stress">Stress</string>
     <string name="section_easy_path">Easy path (recommended)</string>
@@ -79,4 +87,15 @@
     <string name="interruption_stress_row_title">Stress item %1$d</string>
     <string name="interruption_stress_none_path_caption">Same items: modifier-first (none + animatedItem)</string>
     <string name="interruption_stress_mirror_row">#%1$d (modifier path)</string>
+
+    <string name="section_semantics_showcase">Semantic lifecycle showcase</string>
+    <string name="semantics_showcase_hint">Use these scenarios for screenshots: add key, remove key, reinsert during exit, and force-clear exiting rows.</string>
+    <string name="semantics_reset">Reset baseline</string>
+    <string name="semantics_add_hot_key">Add key #42</string>
+    <string name="semantics_remove_hot_key">Remove key #42</string>
+    <string name="semantics_remove_reinsert">Remove + reinsert</string>
+    <string name="semantics_remove_clear_exiting">Remove + clearExitingNow</string>
+    <string name="semantics_shuffle_stable">Shuffle stable keys</string>
+    <string name="semantics_hot_key_caption">Hot key: use remove/reinsert to capture semantic behavior.</string>
+    <string name="semantics_stable_key_caption">Stable key: participates in placement changes.</string>
 </resources>

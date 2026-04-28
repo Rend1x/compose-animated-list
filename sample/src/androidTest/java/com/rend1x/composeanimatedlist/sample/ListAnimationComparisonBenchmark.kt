@@ -13,8 +13,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Surface
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
@@ -101,8 +101,8 @@ class ListAnimationComparisonBenchmark {
             composeRule.activity.runOnUiThread {
                 controller = WorkloadController(workload)
                 composeRule.activity.setContent {
-                    MaterialTheme {
-                        Surface(color = Color(0xFFF5F5F5)) {
+                    SampleTheme {
+                        Surface(color = MaterialTheme.colorScheme.background) {
                             ComparisonHost(
                                 implementation = implementation,
                                 profile = profile,
@@ -340,7 +340,7 @@ private fun BenchmarkRowCard(
         modifier = modifier
             .height(44.dp)
             .background(
-                color = MaterialTheme.colors.primary.copy(alpha = shade),
+                color = MaterialTheme.colorScheme.primary.copy(alpha = shade),
                 shape = RoundedCornerShape(12.dp),
             ),
     )

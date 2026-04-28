@@ -17,10 +17,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.TextButton
-import androidx.compose.material.Surface
-import androidx.compose.material.Text
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -29,7 +29,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.rend1x.composeanimatedlist.AnimatedColumn
 import com.rend1x.composeanimatedlist.animation.AnimatedItemDefaults
@@ -45,10 +44,10 @@ class BenchmarkScenarioActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         val scenario = requireNotNull(intent.toBenchmarkScenarioOrNull())
         setContent {
-            MaterialTheme {
+            SampleTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
-                    color = Color(0xFFF5F5F5),
+                    color = MaterialTheme.colorScheme.background,
                 ) {
                     BenchmarkScenarioScreen(scenario)
                 }
@@ -157,7 +156,7 @@ internal fun BenchmarkScenarioScreen(
         if (isRunning) {
             Text(
                 text = statusText,
-                style = MaterialTheme.typography.subtitle2,
+                style = MaterialTheme.typography.titleSmall,
                 modifier = Modifier.padding(bottom = 8.dp),
             )
         } else {
@@ -167,7 +166,7 @@ internal fun BenchmarkScenarioScreen(
             ) {
                 Text(
                     text = BENCHMARK_READY_TEXT,
-                    style = MaterialTheme.typography.subtitle2,
+                    style = MaterialTheme.typography.titleSmall,
                 )
             }
         }
@@ -256,7 +255,7 @@ private fun BenchmarkScenarioRow(
         modifier = modifier
             .height(44.dp)
             .background(
-                color = MaterialTheme.colors.primary.copy(alpha = shade),
+                color = MaterialTheme.colorScheme.primary.copy(alpha = shade),
                 shape = RoundedCornerShape(12.dp),
             ),
     )

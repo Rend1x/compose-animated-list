@@ -6,11 +6,13 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Button
-import androidx.compose.material.Card
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Switch
-import androidx.compose.material.Text
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Switch
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -109,12 +111,12 @@ fun InterruptionStressSection() {
 
     Text(
         text = stringResource(R.string.section_interruption_stress),
-        style = MaterialTheme.typography.subtitle2,
+        style = MaterialTheme.typography.titleSmall,
     )
     Text(
         text = stringResource(R.string.interruption_stress_hint),
-        style = MaterialTheme.typography.caption,
-        color = MaterialTheme.colors.secondary,
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
     )
 
     Row(
@@ -134,7 +136,7 @@ fun InterruptionStressSection() {
         ) {
             Text(stringResource(R.string.interruption_stress_spam))
         }
-        Button(
+        FilledTonalButton(
             onClick = {
                 if (stressItems.any { it.id == 1 }) {
                     stressItems.removeAll { it.id == 1 }
@@ -157,7 +159,7 @@ fun InterruptionStressSection() {
     ) {
         Text(
             text = stringResource(R.string.interruption_stress_random_loop),
-            style = MaterialTheme.typography.body2,
+            style = MaterialTheme.typography.bodyMedium,
         )
         Switch(
             checked = randomLoop,
@@ -180,7 +182,7 @@ fun InterruptionStressSection() {
     ) {
         Text(
             text = stringResource(R.string.interruption_stress_ultra_fast_loop),
-            style = MaterialTheme.typography.body2,
+            style = MaterialTheme.typography.bodyMedium,
         )
         Switch(
             checked = ultraFastLoop,
@@ -203,7 +205,7 @@ fun InterruptionStressSection() {
     ) {
         Text(
             text = stringResource(R.string.interruption_stress_same_key_burst),
-            style = MaterialTheme.typography.body2,
+            style = MaterialTheme.typography.bodyMedium,
         )
         Switch(
             checked = sameKeyBurst,
@@ -226,7 +228,7 @@ fun InterruptionStressSection() {
     ) {
         Text(
             text = stringResource(R.string.interruption_stress_show_shell_debug),
-            style = MaterialTheme.typography.body2,
+            style = MaterialTheme.typography.bodyMedium,
         )
         Switch(
             checked = showShellDebug,
@@ -248,12 +250,12 @@ fun InterruptionStressSection() {
                 .padding(vertical = 4.dp)
                 .animatedItem(this),
             shape = RoundedCornerShape(12.dp),
-            elevation = 2.dp,
+            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
         ) {
             Column(Modifier.padding(12.dp)) {
                 Text(
                     text = stringResource(R.string.interruption_stress_row_title, item.id),
-                    style = MaterialTheme.typography.subtitle1,
+                    style = MaterialTheme.typography.titleMedium,
                 )
                 Text(
                     text = when (phase) {
@@ -261,8 +263,8 @@ fun InterruptionStressSection() {
                         ItemPhase.Visible -> stringResource(R.string.status_visible)
                         ItemPhase.Exiting -> stringResource(R.string.removing_label)
                     },
-                    style = MaterialTheme.typography.caption,
-                    color = MaterialTheme.colors.primary,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.primary,
                 )
                 if (showShellDebug) {
                     Text(
@@ -272,8 +274,8 @@ fun InterruptionStressSection() {
                             placementProgress,
                             progress,
                         ),
-                        style = MaterialTheme.typography.caption,
-                        color = MaterialTheme.colors.onSurface.copy(alpha = 0.54f),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             }
@@ -282,8 +284,8 @@ fun InterruptionStressSection() {
 
     Text(
         text = stringResource(R.string.interruption_stress_none_path_caption),
-        style = MaterialTheme.typography.caption,
-        color = MaterialTheme.colors.secondary,
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
         modifier = Modifier.padding(top = 16.dp),
     )
     AnimatedColumn(
@@ -298,12 +300,12 @@ fun InterruptionStressSection() {
                 .padding(vertical = 4.dp)
                 .animatedItem(this),
             shape = RoundedCornerShape(8.dp),
-            elevation = 1.dp,
+            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
         ) {
             Text(
                 text = stringResource(R.string.interruption_stress_mirror_row, item.id),
                 modifier = Modifier.padding(12.dp),
-                style = MaterialTheme.typography.body2,
+                style = MaterialTheme.typography.bodyMedium,
             )
         }
     }

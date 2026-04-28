@@ -4,6 +4,12 @@ Diff-driven animated column for Jetpack Compose.
 **Default path:** apply row visuals with [`Modifier.animatedItem`](animatedlist/src/main/java/com/rend1x/composeanimatedlist/AnimatedItemModifier.kt) and keep the column on [`AnimatedItemDefaults.none()`](animatedlist/src/main/java/com/rend1x/composeanimatedlist/animation/AnimatedItemTransitionSpec.kt) so motion is not applied twice. 
 **Advanced path:** use [`ItemPhase`](animatedlist/src/main/java/com/rend1x/composeanimatedlist/ItemPhase.kt) and progress on [`AnimatedItemScope`](animatedlist/src/main/java/com/rend1x/composeanimatedlist/AnimatedItemScope.kt) for custom graphics tied to the column’s own transition spec.
 
+## Semantic Demo
+
+The animation below illustrates the core lifecycle guarantees: item add (`Entering -> Visible`), remove (`Exiting` retention), and reinsert during exit (`Exiting -> Visible` without re-enter).
+
+![Animated list semantic lifecycle demo](docs/animatedlist-semantics.gif)
+
 ## Usage (modifier-first, recommended)
 
 [`AnimatedColumn`](animatedlist/src/main/java/com/rend1x/composeanimatedlist/AnimatedColumn.kt) still runs diffing and lifecycle; [`AnimatedItemDefaults.none()`](animatedlist/src/main/java/com/rend1x/composeanimatedlist/animation/AnimatedItemTransitionSpec.kt) turns off **shell** fade/slide/height so **your** modifier owns how the row appears. If you used a preset such as [`fadeSlide()`](animatedlist/src/main/java/com/rend1x/composeanimatedlist/animation/AnimatedItemTransitionSpec.kt) here **and** [`animatedItem`](animatedlist/src/main/java/com/rend1x/composeanimatedlist/AnimatedItemModifier.kt) on the same surface, both would drive opacity/offset and the animation would look doubled.
