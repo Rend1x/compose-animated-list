@@ -6,12 +6,15 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Card
@@ -37,8 +40,8 @@ import androidx.compose.ui.unit.dp
 import com.rend1x.composeanimatedlist.AnimatedColumn
 import com.rend1x.composeanimatedlist.ItemPhase
 import com.rend1x.composeanimatedlist.animatedItem
-import com.rend1x.composeanimatedlist.animation.AnimatedItemTransitionSpec
 import com.rend1x.composeanimatedlist.animation.AnimatedItemDefaults
+import com.rend1x.composeanimatedlist.animation.AnimatedItemTransitionSpec
 import com.rend1x.composeanimatedlist.animation.EnterSpec
 import com.rend1x.composeanimatedlist.animation.ExitSpec
 import com.rend1x.composeanimatedlist.animation.PlacementBehavior
@@ -56,8 +59,66 @@ private enum class ExitKind { None, Fade, SlideVertical, FadeAndSlide }
 
 private enum class PlacementKind { None, Animated }
 
+private enum class SamplePage { Basics, Advanced, Stress }
+
 @Composable
 fun SampleListScreen() {
+    var currentPage by remember { mutableStateOf(SamplePage.Basics) }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .windowInsetsPadding(WindowInsets.safeDrawing)
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Text(
+            text = stringResource(R.string.screen_heading),
+            style = MaterialTheme.typography.h6,
+        )
+        Text(
+            text = stringResource(R.string.screen_subheading),
+            style = MaterialTheme.typography.caption,
+            color = MaterialTheme.colors.secondary,
+        )
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            SamplePage.entries.forEach { page ->
+                FilterButton(
+                    selected = currentPage == page,
+                    label = stringResource(samplePageLabel(page)),
+                    onClick = { currentPage = page },
+                )
+            }
+        }
+
+        Divider()
+
+        when (currentPage) {
+            SamplePage.Basics -> BasicsExamplesPage(
+                modifier = Modifier.weight(1f),
+            )
+
+            SamplePage.Advanced -> AdvancedExamplesPage(
+                modifier = Modifier.weight(1f),
+            )
+
+            SamplePage.Stress -> StressExamplesPage(
+                modifier = Modifier.weight(1f),
+            )
+        }
+    }
+}
+
+@Composable
+private fun BasicsExamplesPage(
+    modifier: Modifier = Modifier,
+) {
     val items = remember {
         mutableStateListOf<DemoItem>().apply {
             addAll((1..6).map { DemoItem(it) })
@@ -78,75 +139,12 @@ fun SampleListScreen() {
     val tagPool = remember {
         listOf("Kotlin", "Diff", "UI", "Motion", "Samples")
     }
-
-    var enterKind by remember { mutableStateOf(EnterKind.FadeAndSlide) }
-    var enterDuration by remember { mutableIntStateOf(240) }
-    var enterOffsetDp by remember { mutableIntStateOf(16) }
-
-    var exitKind by remember { mutableStateOf(ExitKind.FadeAndSlide) }
-    var exitDuration by remember { mutableIntStateOf(200) }
-    var exitOffsetDp by remember { mutableIntStateOf(16) }
-    var exitDirection by remember { mutableStateOf(VerticalDirection.Up) }
-
-    var placementKind by remember { mutableStateOf(PlacementKind.Animated) }
-    var placementDuration by remember { mutableIntStateOf(260) }
-
     var horizontalCentered by remember { mutableStateOf(true) }
 
-    val transitionSpec = remember(
-        enterKind,
-        enterDuration,
-        enterOffsetDp,
-        exitKind,
-        exitDuration,
-        exitOffsetDp,
-        exitDirection,
-        placementKind,
-        placementDuration,
-    ) {
-        val enter = when (enterKind) {
-            EnterKind.None -> EnterSpec.None
-            EnterKind.Fade -> EnterSpec.Fade(enterDuration)
-            EnterKind.SlideVertical -> EnterSpec.SlideVertical(enterOffsetDp.dp, enterDuration)
-            EnterKind.FadeAndSlide -> EnterSpec.FadeAndSlide(enterOffsetDp.dp, enterDuration)
-        }
-        val exit = when (exitKind) {
-            ExitKind.None -> ExitSpec.None
-            ExitKind.Fade -> ExitSpec.Fade(exitDuration)
-            ExitKind.SlideVertical -> ExitSpec.SlideVertical(
-                exitOffsetDp.dp,
-                exitDirection,
-                exitDuration
-            )
-
-            ExitKind.FadeAndSlide -> ExitSpec.FadeAndSlide(
-                exitOffsetDp.dp,
-                exitDirection,
-                exitDuration
-            )
-        }
-        val placement = when (placementKind) {
-            PlacementKind.None -> PlacementBehavior.None
-            PlacementKind.Animated -> PlacementBehavior.Animated(placementDuration)
-        }
-        AnimatedItemTransitionSpec(enter = enter, exit = exit, placement = placement)
-    }
-
-    val scrollState = rememberScrollState()
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-            .verticalScroll(scrollState),
+        modifier = modifier.verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Text(
-            text = stringResource(R.string.screen_heading),
-            style = MaterialTheme.typography.h6,
-        )
-
-        InterruptionStressSection()
-
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -178,6 +176,23 @@ fun SampleListScreen() {
         )
 
         Text(
+            text = stringResource(R.string.section_list_layout),
+            style = MaterialTheme.typography.subtitle2,
+        )
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FilterButton(
+                selected = horizontalCentered,
+                label = stringResource(R.string.align_center),
+                onClick = { horizontalCentered = true },
+            )
+            FilterButton(
+                selected = !horizontalCentered,
+                label = stringResource(R.string.align_start),
+                onClick = { horizontalCentered = false },
+            )
+        }
+
+        Text(
             text = stringResource(R.string.section_easy_path),
             style = MaterialTheme.typography.subtitle2,
         )
@@ -189,6 +204,7 @@ fun SampleListScreen() {
         AnimatedColumn(
             items = items.toList(),
             key = { it.id },
+            state = listState,
             transitionSpec = AnimatedItemDefaults.none(),
             modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = if (horizontalCentered) {
@@ -272,6 +288,107 @@ fun SampleListScreen() {
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun AdvancedExamplesPage(
+    modifier: Modifier = Modifier,
+) {
+    val items = remember {
+        mutableStateListOf<DemoItem>().apply {
+            addAll((1..6).map { DemoItem(it) })
+        }
+    }
+    var nextId by remember { mutableIntStateOf(7) }
+    val listState = rememberAnimatedListState()
+
+    var enterKind by remember { mutableStateOf(EnterKind.FadeAndSlide) }
+    var enterDuration by remember { mutableIntStateOf(240) }
+    var enterOffsetDp by remember { mutableIntStateOf(16) }
+
+    var exitKind by remember { mutableStateOf(ExitKind.FadeAndSlide) }
+    var exitDuration by remember { mutableIntStateOf(200) }
+    var exitOffsetDp by remember { mutableIntStateOf(16) }
+    var exitDirection by remember { mutableStateOf(VerticalDirection.Up) }
+
+    var placementKind by remember { mutableStateOf(PlacementKind.Animated) }
+    var placementDuration by remember { mutableIntStateOf(260) }
+
+    var horizontalCentered by remember { mutableStateOf(true) }
+
+    val transitionSpec = remember(
+        enterKind,
+        enterDuration,
+        enterOffsetDp,
+        exitKind,
+        exitDuration,
+        exitOffsetDp,
+        exitDirection,
+        placementKind,
+        placementDuration,
+    ) {
+        val enter = when (enterKind) {
+            EnterKind.None -> EnterSpec.None
+            EnterKind.Fade -> EnterSpec.Fade(enterDuration)
+            EnterKind.SlideVertical -> EnterSpec.SlideVertical(enterOffsetDp.dp, enterDuration)
+            EnterKind.FadeAndSlide -> EnterSpec.FadeAndSlide(enterOffsetDp.dp, enterDuration)
+        }
+        val exit = when (exitKind) {
+            ExitKind.None -> ExitSpec.None
+            ExitKind.Fade -> ExitSpec.Fade(exitDuration)
+            ExitKind.SlideVertical -> ExitSpec.SlideVertical(
+                exitOffsetDp.dp,
+                exitDirection,
+                exitDuration,
+            )
+
+            ExitKind.FadeAndSlide -> ExitSpec.FadeAndSlide(
+                exitOffsetDp.dp,
+                exitDirection,
+                exitDuration,
+            )
+        }
+        val placement = when (placementKind) {
+            PlacementKind.None -> PlacementBehavior.None
+            PlacementKind.Animated -> PlacementBehavior.Animated(placementDuration)
+        }
+        AnimatedItemTransitionSpec(enter = enter, exit = exit, placement = placement)
+    }
+
+    Column(
+        modifier = modifier.verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Button(
+                onClick = {
+                    items.add(DemoItem(nextId))
+                    nextId++
+                },
+            ) {
+                Text(stringResource(R.string.action_add))
+            }
+            Button(
+                onClick = { if (items.isNotEmpty()) items.removeAt(items.lastIndex) },
+                enabled = items.isNotEmpty(),
+            ) {
+                Text(stringResource(R.string.action_remove_last))
+            }
+        }
+
+        Text(
+            text = if (listState.isAnimating) {
+                stringResource(R.string.animating_true)
+            } else {
+                stringResource(R.string.animating_false)
+            },
+            style = MaterialTheme.typography.caption,
+            color = MaterialTheme.colors.secondary,
+        )
 
         Text(
             text = stringResource(R.string.section_advanced_path),
@@ -574,6 +691,18 @@ fun SampleListScreen() {
 }
 
 @Composable
+private fun StressExamplesPage(
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier.verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        InterruptionStressSection()
+    }
+}
+
+@Composable
 private fun PresetRow(
     label: String,
     onClick: () -> Unit,
@@ -669,6 +798,12 @@ private fun RowScope.RemoveModeButton(
     ) {
         Text(label)
     }
+}
+
+private fun samplePageLabel(page: SamplePage): Int = when (page) {
+    SamplePage.Basics -> R.string.page_basics
+    SamplePage.Advanced -> R.string.page_advanced
+    SamplePage.Stress -> R.string.page_stress
 }
 
 private fun enterKindLabel(kind: EnterKind): Int = when (kind) {

@@ -2,6 +2,10 @@
 <resources>
     <string name="app_name">Animated list sample</string>
     <string name="screen_heading">AnimatedColumn playground</string>
+    <string name="screen_subheading">Examples are split into separate pages so each screen stays shorter and easier to explore.</string>
+    <string name="page_basics">Basics</string>
+    <string name="page_advanced">Advanced</string>
+    <string name="page_stress">Stress</string>
     <string name="section_easy_path">Easy path (recommended)</string>
     <string name="easy_path_hint">AnimatedItemDefaults.none() on the column and Modifier.animatedItem(this) on each row — no manual progress for a standard fade + slide.</string>
     <string name="section_tags_easy">Easy path: tags</string>
