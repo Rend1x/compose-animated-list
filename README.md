@@ -4,11 +4,21 @@ Diff-driven animated column for Jetpack Compose.
 **Default path:** apply row visuals with [`Modifier.animatedItem`](animatedlist/src/main/java/com/rend1x/composeanimatedlist/AnimatedItemModifier.kt) and keep the column on [`AnimatedItemDefaults.none()`](animatedlist/src/main/java/com/rend1x/composeanimatedlist/animation/AnimatedItemTransitionSpec.kt) so motion is not applied twice. 
 **Advanced path:** use [`ItemPhase`](animatedlist/src/main/java/com/rend1x/composeanimatedlist/ItemPhase.kt) and progress on [`AnimatedItemScope`](animatedlist/src/main/java/com/rend1x/composeanimatedlist/AnimatedItemScope.kt) for custom graphics tied to the column’s own transition spec.
 
-## Semantic Demo
+## Feature Demos
 
-The animation below illustrates the core lifecycle guarantees: item add (`Entering -> Visible`), remove (`Exiting` retention), and reinsert during exit (`Exiting -> Visible` without re-enter).
+Short recordings from the sample app show the main cases the library is built for: basic list changes, side-by-side comparison, stable-key reorder, heavier update pressure, animation presets, and edge cases.
 
-![Animated list semantic lifecycle demo](docs/animatedlist-semantics.gif)
+| Basic insert/remove | Animated vs plain |
+|--------|--------|
+| <video src="docs/demo/basic.mp4" controls muted loop playsinline width="260"></video> | <video src="docs/demo/compare.mp4" controls muted loop playsinline width="260"></video> |
+
+| Stable-key shuffle | Many updates |
+|--------|--------|
+| <video src="docs/demo/shuffle.mp4" controls muted loop playsinline width="260"></video> | <video src="docs/demo/load.mp4" controls muted loop playsinline width="260"></video> |
+
+| Animation variants | Edge cases |
+|--------|--------|
+| <video src="docs/demo/variants.mp4" controls muted loop playsinline width="260"></video> | <video src="docs/demo/edges.mp4" controls muted loop playsinline width="260"></video> |
 
 ## Usage (modifier-first, recommended)
 
