@@ -113,6 +113,18 @@ AnimatedItemDefaults.fadeSlide() // column-owned motion; avoid stacking animated
 - **`animatedlist`** — Compose UI adapter over `animatedlist-core` (minSdk **23**; current Compose Material and merged AndroidTest manifests require it)
 - **`sample`** — easy path (`none` + `animatedItem`) vs advanced (tunable `transitionSpec` + phase/progress)
 
+## Dependency surface
+
+The library module keeps its published dependency surface small and stable-only:
+
+- **API dependencies:** `androidx.compose.foundation:foundation`, `androidx.compose.runtime:runtime`, and `androidx.compose.ui:ui`. These are exposed because public APIs use `@Composable`, `Modifier`, `Alignment`, `Dp`, and `Column`/layout types.
+- **Implementation dependencies:** `animatedlist-core` and `androidx.compose.animation:animation`. Consumers get them transitively when depending on `animatedlist`, but they are not part of the public API contract.
+- **BOM-managed Compose versions:** Compose artifacts are versioned by `androidx.compose:compose-bom`; individual Compose module versions are intentionally not repeated.
+- **Debug-only preview/tooling:** Compose Material 2, `ui-tooling-preview`, `ui-tooling`, and `ui-test-manifest` are only used by the library debug/preview source set and are not release dependencies.
+- **Sample-only dependencies:** `androidx.activity:activity-compose`, `androidx.appcompat:appcompat`, `androidx.core:core-ktx`, Compose Material 3, Material icons, Espresso, AndroidX Test JUnit, and Macrobenchmark/UIAutomator are only needed by the sample, android tests, or macrobenchmark module.
+
+Main transitive dependencies you will see from Compose include `animation-core`, `foundation-layout`, `ui-graphics`, `ui-text`, `ui-unit`, Kotlin stdlib, and AndroidX support libraries such as annotation, collection, lifecycle, savedstate, and tracing. Do not add these manually unless your app uses their APIs directly.
+
 ## Benchmarks
 
 Use the core benchmark runner when you want to estimate the raw overhead of the diff/render engine before layering Compose animation and drawing on top:
