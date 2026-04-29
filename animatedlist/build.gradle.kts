@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.maven.publish)
 }
 
 android {
@@ -54,4 +55,44 @@ dependencies {
     androidTestImplementation(libs.androidx.junit)
 
     testImplementation(libs.junit)
+}
+
+mavenPublishing {
+    publishToMavenCentral()
+    signAllPublications()
+
+    coordinates(
+        groupId = providers.gradleProperty("GROUP").get(),
+        artifactId = providers.gradleProperty("POM_ARTIFACT_ID").get(),
+        version = providers.gradleProperty("VERSION_NAME").get(),
+    )
+
+    pom {
+        name.set("Compose Animated List")
+        description.set("Animated list utilities for Jetpack Compose.")
+        inceptionYear.set("2026")
+        url.set(providers.gradleProperty("PROJECT_URL").get())
+
+        licenses {
+            license {
+                name.set(providers.gradleProperty("PROJECT_LICENSE_NAME").get())
+                url.set(providers.gradleProperty("PROJECT_LICENSE_URL").get())
+                distribution.set(providers.gradleProperty("PROJECT_LICENSE_DIST").get())
+            }
+        }
+
+        developers {
+            developer {
+                id.set(providers.gradleProperty("PROJECT_DEVELOPER_ID").get())
+                name.set(providers.gradleProperty("PROJECT_DEVELOPER_NAME").get())
+                url.set(providers.gradleProperty("PROJECT_DEVELOPER_URL").get())
+            }
+        }
+
+        scm {
+            url.set(providers.gradleProperty("PROJECT_SCM_URL").get())
+            connection.set(providers.gradleProperty("PROJECT_SCM_CONNECTION").get())
+            developerConnection.set(providers.gradleProperty("PROJECT_SCM_DEV_CONNECTION").get())
+        }
+    }
 }

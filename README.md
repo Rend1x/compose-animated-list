@@ -226,3 +226,9 @@ These are the engine-level guarantees enforced by `AnimatedListRenderEngine` / `
 | **Last-wins keys** | Duplicates collapse to the **last** occurrence per key; sanitized order is by **increasing index of that last occurrence** in the original list. |
 
 Compose timing (`LaunchedEffect`, animation frames) is layered on top; see **Behavior guarantees** above for UI-facing rules.
+
+## License
+
+Copyright 2026 rend1x (Maxim Grishin)
+
+Licensed under the Apache License, Version 2.0. See [LICENSE](LICENSE).

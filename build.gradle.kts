@@ -5,7 +5,13 @@ plugins {
     alias(libs.plugins.kotlin.android) apply false
     alias(libs.plugins.kotlin.jvm) apply false
     alias(libs.plugins.kotlin.compose) apply false
+    alias(libs.plugins.maven.publish) apply false
     alias(libs.plugins.binary.compatibility.validator)
+}
+
+allprojects {
+    group = providers.gradleProperty("GROUP").get()
+    version = providers.gradleProperty("VERSION_NAME").get()
 }
 
 apiValidation {
