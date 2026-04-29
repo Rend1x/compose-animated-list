@@ -122,6 +122,7 @@ fun <T> AnimatedColumn(
                     item = renderItem,
                     listState = state,
                     transitionSpec = transitionSpec,
+                    onEnterFinished = { renderState.onEnterAnimationFinished(renderItem.key) },
                     onExitFinished = { renderState.onExitAnimationFinished(renderItem.key) },
                     content = content,
                 )
@@ -135,10 +136,12 @@ private fun <T> ColumnScope.AnimatedColumnItem(
     item: AnimatedListItem<T>,
     listState: AnimatedListState,
     transitionSpec: AnimatedItemTransitionSpec,
+    onEnterFinished: () -> Unit,
     onExitFinished: () -> Unit,
     content: @Composable AnimatedItemScope.(T) -> Unit,
 ) {
     val density = LocalDensity.current
+    val currentOnEnterFinished by rememberUpdatedState(onEnterFinished)
     val currentOnExitFinished by rememberUpdatedState(onExitFinished)
     val placement = transitionSpec.placement
     val enterOffsetPx = remember(transitionSpec.enter, density) {
@@ -189,7 +192,9 @@ private fun <T> ColumnScope.AnimatedColumnItem(
                     sizeProgress = sizeProgress,
                     enter = transitionSpec.enter,
                     placement = placement,
-                )
+                ).also {
+                    currentOnEnterFinished()
+                }
 
                 PresenceState.Present -> animatePresentSettle(
                     alpha = alpha,
@@ -515,4 +520,3 @@ internal fun slideProgressTowardTarget(
     if (denom < ProgressEpsilon) return 1f
     return (1f - abs(translationY) / denom).coerceIn(0f, 1f)
 }
-

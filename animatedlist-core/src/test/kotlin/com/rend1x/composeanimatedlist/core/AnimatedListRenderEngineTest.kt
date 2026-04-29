@@ -47,4 +47,18 @@ class AnimatedListRenderEngineTest {
         engine.onExitAnimationFinished("x")
         assertTrue(engine.items.isEmpty())
     }
+
+    @Test
+    fun onEnterAnimationFinished_marksEnteringKeyPresent() {
+        val engine = AnimatedListRenderEngine(
+            initialItems = listOf("a"),
+            keySelector = { it },
+            keyPolicy = AnimatedListKeyPolicy.Strict,
+        )
+        engine.update(listOf("a", "b"), { it })
+
+        engine.onEnterAnimationFinished("b")
+
+        assertEquals(PresenceState.Present, engine.items.first { it.key == "b" }.presence)
+    }
 }

@@ -84,6 +84,11 @@ internal class AnimatedListRenderState<T>(
         renderItems = engine.items
     }
 
+    fun onEnterAnimationFinished(key: Any) {
+        engine.onEnterAnimationFinished(key)
+        renderItems = engine.items
+    }
+
     fun clearExitingNow() {
         engine.clearExitingNow()
         renderItems = engine.items

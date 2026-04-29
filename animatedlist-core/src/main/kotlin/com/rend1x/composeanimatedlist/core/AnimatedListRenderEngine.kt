@@ -33,6 +33,16 @@ class AnimatedListRenderEngine<T>(
         }
     }
 
+    fun onEnterAnimationFinished(key: Any) {
+        items = items.map { item ->
+            if (item.key == key && item.presence == PresenceState.Entering) {
+                item.copy(presence = PresenceState.Present)
+            } else {
+                item
+            }
+        }
+    }
+
     fun clearExitingNow() {
         items = items.filterNot { it.presence == PresenceState.Exiting }
     }

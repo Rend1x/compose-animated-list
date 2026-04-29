@@ -54,14 +54,18 @@ class AnimatedColumnInterruptionInstrumentedTest {
         }
 
         composeRule.waitForIdle()
-        items = listOf(Row("a"), Row("b"))
-        composeRule.waitForIdle()
-
         composeRule.mainClock.autoAdvance = false
+        composeRule.runOnIdle {
+            items = listOf(Row("a"), Row("b"))
+        }
+        composeRule.waitForIdle()
+        composeRule.mainClock.advanceTimeByFrame()
         composeRule.mainClock.advanceTimeBy(500)
 
-        items = listOf(Row("a"))
-        composeRule.mainClock.advanceTimeByFrame()
+        composeRule.runOnIdle {
+            items = listOf(Row("a"))
+        }
+        composeRule.advanceFramesAndWait()
 
         composeRule.onNodeWithTag("phase-b").assertIsDisplayed().assertTextEquals("EXITING")
     }
@@ -92,14 +96,18 @@ class AnimatedColumnInterruptionInstrumentedTest {
         }
 
         composeRule.waitForIdle()
-        items = emptyList()
-        composeRule.waitForIdle()
-
         composeRule.mainClock.autoAdvance = false
+        composeRule.runOnIdle {
+            items = emptyList()
+        }
+        composeRule.waitForIdle()
+        composeRule.mainClock.advanceTimeByFrame()
         composeRule.mainClock.advanceTimeBy(500)
 
-        items = listOf(Row("a"))
-        composeRule.mainClock.advanceTimeByFrame()
+        composeRule.runOnIdle {
+            items = listOf(Row("a"))
+        }
+        composeRule.advanceFramesAndWait()
 
         composeRule.onNodeWithTag("phase-a").assertIsDisplayed().assertTextEquals("VISIBLE")
     }
@@ -180,8 +188,7 @@ class AnimatedColumnInterruptionInstrumentedTest {
         composeRule.mainClock.autoAdvance = true
         composeRule.waitForIdle()
 
-        // Differ keeps new keys Entering until value changes; shell may already look settled.
-        composeRule.onNodeWithTag("row-c").assertIsDisplayed().assertTextEquals("c:Entering")
+        composeRule.onNodeWithTag("row-c").assertIsDisplayed().assertTextEquals("c:Visible")
     }
 
     @Test
@@ -248,15 +255,28 @@ class AnimatedColumnInterruptionInstrumentedTest {
         }
 
         composeRule.waitForIdle()
-        items = emptyList()
-        composeRule.waitForIdle()
-
         composeRule.mainClock.autoAdvance = false
+        composeRule.runOnIdle {
+            items = emptyList()
+        }
+        composeRule.waitForIdle()
+        composeRule.mainClock.advanceTimeByFrame()
         composeRule.mainClock.advanceTimeBy(250)
 
-        items = listOf(Row("a"))
-        composeRule.mainClock.advanceTimeByFrame()
+        composeRule.runOnIdle {
+            items = listOf(Row("a"))
+        }
+        composeRule.advanceFramesAndWait()
 
         composeRule.onNodeWithTag("phase-a").assertIsDisplayed().assertTextEquals("VISIBLE")
+    }
+
+    private fun androidx.compose.ui.test.junit4.AndroidComposeTestRule<*, *>.advanceFramesAndWait(
+        frameCount: Int = 3,
+    ) {
+        repeat(frameCount) {
+            mainClock.advanceTimeByFrame()
+            waitForIdle()
+        }
     }
 }
