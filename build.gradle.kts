@@ -5,4 +5,16 @@ plugins {
     alias(libs.plugins.kotlin.android) apply false
     alias(libs.plugins.kotlin.jvm) apply false
     alias(libs.plugins.kotlin.compose) apply false
+    alias(libs.plugins.binary.compatibility.validator)
+}
+
+apiValidation {
+    ignoredProjects.addAll(
+        listOf(
+            "sample",
+            "macrobenchmark",
+        )
+    )
+
+    ignoredClasses.add("com.rend1x.composeanimatedlist.BuildConfig")
 }

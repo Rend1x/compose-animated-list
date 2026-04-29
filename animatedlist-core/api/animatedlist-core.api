@@ -1,0 +1,51 @@
+public final class com/rend1x/composeanimatedlist/core/AnimatedListDiffer {
+	public static final field INSTANCE Lcom/rend1x/composeanimatedlist/core/AnimatedListDiffer;
+	public final fun diff (Ljava/util/List;Ljava/util/List;Lkotlin/jvm/functions/Function1;Lcom/rend1x/composeanimatedlist/core/AnimatedListKeyPolicy;)Ljava/util/List;
+}
+
+public final class com/rend1x/composeanimatedlist/core/AnimatedListItem {
+	public fun <init> (Ljava/lang/Object;Ljava/lang/Object;Lcom/rend1x/composeanimatedlist/core/PresenceState;)V
+	public final fun component1 ()Ljava/lang/Object;
+	public final fun component2 ()Ljava/lang/Object;
+	public final fun component3 ()Lcom/rend1x/composeanimatedlist/core/PresenceState;
+	public final fun copy (Ljava/lang/Object;Ljava/lang/Object;Lcom/rend1x/composeanimatedlist/core/PresenceState;)Lcom/rend1x/composeanimatedlist/core/AnimatedListItem;
+	public static synthetic fun copy$default (Lcom/rend1x/composeanimatedlist/core/AnimatedListItem;Ljava/lang/Object;Ljava/lang/Object;Lcom/rend1x/composeanimatedlist/core/PresenceState;ILjava/lang/Object;)Lcom/rend1x/composeanimatedlist/core/AnimatedListItem;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getKey ()Ljava/lang/Object;
+	public final fun getPresence ()Lcom/rend1x/composeanimatedlist/core/PresenceState;
+	public final fun getValue ()Ljava/lang/Object;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/rend1x/composeanimatedlist/core/AnimatedListKeyPolicy : java/lang/Enum {
+	public static final field LastWins Lcom/rend1x/composeanimatedlist/core/AnimatedListKeyPolicy;
+	public static final field Strict Lcom/rend1x/composeanimatedlist/core/AnimatedListKeyPolicy;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/rend1x/composeanimatedlist/core/AnimatedListKeyPolicy;
+	public static fun values ()[Lcom/rend1x/composeanimatedlist/core/AnimatedListKeyPolicy;
+}
+
+public final class com/rend1x/composeanimatedlist/core/AnimatedListKeys {
+	public static final field INSTANCE Lcom/rend1x/composeanimatedlist/core/AnimatedListKeys;
+	public final fun sanitizeAnimatedListInput (Ljava/util/List;Lkotlin/jvm/functions/Function1;Lcom/rend1x/composeanimatedlist/core/AnimatedListKeyPolicy;)Ljava/util/List;
+}
+
+public final class com/rend1x/composeanimatedlist/core/AnimatedListRenderEngine {
+	public fun <init> (Ljava/util/List;Lkotlin/jvm/functions/Function1;Lcom/rend1x/composeanimatedlist/core/AnimatedListKeyPolicy;)V
+	public final fun clearExitingNow ()V
+	public final fun getItems ()Ljava/util/List;
+	public final fun onEnterAnimationFinished (Ljava/lang/Object;)V
+	public final fun onExitAnimationFinished (Ljava/lang/Object;)V
+	public final fun update (Ljava/util/List;Lkotlin/jvm/functions/Function1;)V
+}
+
+public final class com/rend1x/composeanimatedlist/core/PresenceState : java/lang/Enum {
+	public static final field Entering Lcom/rend1x/composeanimatedlist/core/PresenceState;
+	public static final field Exiting Lcom/rend1x/composeanimatedlist/core/PresenceState;
+	public static final field Present Lcom/rend1x/composeanimatedlist/core/PresenceState;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/rend1x/composeanimatedlist/core/PresenceState;
+	public static fun values ()[Lcom/rend1x/composeanimatedlist/core/PresenceState;
+}
+

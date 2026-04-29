@@ -1,0 +1,211 @@
+public final class com/rend1x/composeanimatedlist/AnimatedColumnKt {
+	public static final fun AnimatedColumn (Ljava/util/List;Lkotlin/jvm/functions/Function1;Landroidx/compose/ui/Modifier;Lcom/rend1x/composeanimatedlist/state/AnimatedListState;Lcom/rend1x/composeanimatedlist/animation/AnimatedItemTransitionSpec;Landroidx/compose/ui/Alignment$Horizontal;Lkotlin/jvm/functions/Function4;Landroidx/compose/runtime/Composer;II)V
+}
+
+public final class com/rend1x/composeanimatedlist/AnimatedItemModifierKt {
+	public static final fun animatedItem-wH6b6FI (Landroidx/compose/ui/Modifier;Lcom/rend1x/composeanimatedlist/AnimatedItemScope;F)Landroidx/compose/ui/Modifier;
+	public static synthetic fun animatedItem-wH6b6FI$default (Landroidx/compose/ui/Modifier;Lcom/rend1x/composeanimatedlist/AnimatedItemScope;FILjava/lang/Object;)Landroidx/compose/ui/Modifier;
+}
+
+public abstract interface class com/rend1x/composeanimatedlist/AnimatedItemScope {
+	public abstract fun getPhase ()Lcom/rend1x/composeanimatedlist/ItemPhase;
+	public abstract fun getPlacementProgress ()F
+	public abstract fun getProgress ()F
+	public abstract fun getVisibilityProgress ()F
+}
+
+public final class com/rend1x/composeanimatedlist/ItemPhase : java/lang/Enum {
+	public static final field Entering Lcom/rend1x/composeanimatedlist/ItemPhase;
+	public static final field Exiting Lcom/rend1x/composeanimatedlist/ItemPhase;
+	public static final field Visible Lcom/rend1x/composeanimatedlist/ItemPhase;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/rend1x/composeanimatedlist/ItemPhase;
+	public static fun values ()[Lcom/rend1x/composeanimatedlist/ItemPhase;
+}
+
+public final class com/rend1x/composeanimatedlist/animation/AnimatedItemDefaults {
+	public static final field $stable I
+	public static final field INSTANCE Lcom/rend1x/composeanimatedlist/animation/AnimatedItemDefaults;
+	public final fun fade (Lcom/rend1x/composeanimatedlist/animation/PlacementBehavior;)Lcom/rend1x/composeanimatedlist/animation/AnimatedItemTransitionSpec;
+	public static synthetic fun fade$default (Lcom/rend1x/composeanimatedlist/animation/AnimatedItemDefaults;Lcom/rend1x/composeanimatedlist/animation/PlacementBehavior;ILjava/lang/Object;)Lcom/rend1x/composeanimatedlist/animation/AnimatedItemTransitionSpec;
+	public final fun fadeSlide (Lcom/rend1x/composeanimatedlist/animation/PlacementBehavior;)Lcom/rend1x/composeanimatedlist/animation/AnimatedItemTransitionSpec;
+	public static synthetic fun fadeSlide$default (Lcom/rend1x/composeanimatedlist/animation/AnimatedItemDefaults;Lcom/rend1x/composeanimatedlist/animation/PlacementBehavior;ILjava/lang/Object;)Lcom/rend1x/composeanimatedlist/animation/AnimatedItemTransitionSpec;
+	public final fun none ()Lcom/rend1x/composeanimatedlist/animation/AnimatedItemTransitionSpec;
+	public final fun slide (Lcom/rend1x/composeanimatedlist/animation/PlacementBehavior;)Lcom/rend1x/composeanimatedlist/animation/AnimatedItemTransitionSpec;
+	public static synthetic fun slide$default (Lcom/rend1x/composeanimatedlist/animation/AnimatedItemDefaults;Lcom/rend1x/composeanimatedlist/animation/PlacementBehavior;ILjava/lang/Object;)Lcom/rend1x/composeanimatedlist/animation/AnimatedItemTransitionSpec;
+}
+
+public final class com/rend1x/composeanimatedlist/animation/AnimatedItemTransitionSpec {
+	public static final field $stable I
+	public fun <init> (Lcom/rend1x/composeanimatedlist/animation/EnterSpec;Lcom/rend1x/composeanimatedlist/animation/ExitSpec;Lcom/rend1x/composeanimatedlist/animation/PlacementBehavior;)V
+	public synthetic fun <init> (Lcom/rend1x/composeanimatedlist/animation/EnterSpec;Lcom/rend1x/composeanimatedlist/animation/ExitSpec;Lcom/rend1x/composeanimatedlist/animation/PlacementBehavior;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lcom/rend1x/composeanimatedlist/animation/EnterSpec;
+	public final fun component2 ()Lcom/rend1x/composeanimatedlist/animation/ExitSpec;
+	public final fun component3 ()Lcom/rend1x/composeanimatedlist/animation/PlacementBehavior;
+	public final fun copy (Lcom/rend1x/composeanimatedlist/animation/EnterSpec;Lcom/rend1x/composeanimatedlist/animation/ExitSpec;Lcom/rend1x/composeanimatedlist/animation/PlacementBehavior;)Lcom/rend1x/composeanimatedlist/animation/AnimatedItemTransitionSpec;
+	public static synthetic fun copy$default (Lcom/rend1x/composeanimatedlist/animation/AnimatedItemTransitionSpec;Lcom/rend1x/composeanimatedlist/animation/EnterSpec;Lcom/rend1x/composeanimatedlist/animation/ExitSpec;Lcom/rend1x/composeanimatedlist/animation/PlacementBehavior;ILjava/lang/Object;)Lcom/rend1x/composeanimatedlist/animation/AnimatedItemTransitionSpec;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getEnter ()Lcom/rend1x/composeanimatedlist/animation/EnterSpec;
+	public final fun getExit ()Lcom/rend1x/composeanimatedlist/animation/ExitSpec;
+	public final fun getPlacement ()Lcom/rend1x/composeanimatedlist/animation/PlacementBehavior;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class com/rend1x/composeanimatedlist/animation/EnterSpec {
+}
+
+public final class com/rend1x/composeanimatedlist/animation/EnterSpec$Fade : com/rend1x/composeanimatedlist/animation/EnterSpec {
+	public static final field $stable I
+	public fun <init> ()V
+	public fun <init> (I)V
+	public synthetic fun <init> (IILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()I
+	public final fun copy (I)Lcom/rend1x/composeanimatedlist/animation/EnterSpec$Fade;
+	public static synthetic fun copy$default (Lcom/rend1x/composeanimatedlist/animation/EnterSpec$Fade;IILjava/lang/Object;)Lcom/rend1x/composeanimatedlist/animation/EnterSpec$Fade;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDurationMillis ()I
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/rend1x/composeanimatedlist/animation/EnterSpec$FadeAndSlide : com/rend1x/composeanimatedlist/animation/EnterSpec {
+	public static final field $stable I
+	public synthetic fun <init> (FIILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (FILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1-D9Ej5fM ()F
+	public final fun component2 ()I
+	public final fun copy-D5KLDUw (FI)Lcom/rend1x/composeanimatedlist/animation/EnterSpec$FadeAndSlide;
+	public static synthetic fun copy-D5KLDUw$default (Lcom/rend1x/composeanimatedlist/animation/EnterSpec$FadeAndSlide;FIILjava/lang/Object;)Lcom/rend1x/composeanimatedlist/animation/EnterSpec$FadeAndSlide;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDurationMillis ()I
+	public final fun getOffset-D9Ej5fM ()F
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/rend1x/composeanimatedlist/animation/EnterSpec$None : com/rend1x/composeanimatedlist/animation/EnterSpec {
+	public static final field $stable I
+	public static final field INSTANCE Lcom/rend1x/composeanimatedlist/animation/EnterSpec$None;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/rend1x/composeanimatedlist/animation/EnterSpec$SlideVertical : com/rend1x/composeanimatedlist/animation/EnterSpec {
+	public static final field $stable I
+	public synthetic fun <init> (FIILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (FILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1-D9Ej5fM ()F
+	public final fun component2 ()I
+	public final fun copy-D5KLDUw (FI)Lcom/rend1x/composeanimatedlist/animation/EnterSpec$SlideVertical;
+	public static synthetic fun copy-D5KLDUw$default (Lcom/rend1x/composeanimatedlist/animation/EnterSpec$SlideVertical;FIILjava/lang/Object;)Lcom/rend1x/composeanimatedlist/animation/EnterSpec$SlideVertical;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDurationMillis ()I
+	public final fun getOffset-D9Ej5fM ()F
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class com/rend1x/composeanimatedlist/animation/ExitSpec {
+}
+
+public final class com/rend1x/composeanimatedlist/animation/ExitSpec$Fade : com/rend1x/composeanimatedlist/animation/ExitSpec {
+	public static final field $stable I
+	public fun <init> ()V
+	public fun <init> (I)V
+	public synthetic fun <init> (IILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()I
+	public final fun copy (I)Lcom/rend1x/composeanimatedlist/animation/ExitSpec$Fade;
+	public static synthetic fun copy$default (Lcom/rend1x/composeanimatedlist/animation/ExitSpec$Fade;IILjava/lang/Object;)Lcom/rend1x/composeanimatedlist/animation/ExitSpec$Fade;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDurationMillis ()I
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/rend1x/composeanimatedlist/animation/ExitSpec$FadeAndSlide : com/rend1x/composeanimatedlist/animation/ExitSpec {
+	public static final field $stable I
+	public synthetic fun <init> (FLcom/rend1x/composeanimatedlist/animation/VerticalDirection;IILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (FLcom/rend1x/composeanimatedlist/animation/VerticalDirection;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1-D9Ej5fM ()F
+	public final fun component2 ()Lcom/rend1x/composeanimatedlist/animation/VerticalDirection;
+	public final fun component3 ()I
+	public final fun copy-8Feqmps (FLcom/rend1x/composeanimatedlist/animation/VerticalDirection;I)Lcom/rend1x/composeanimatedlist/animation/ExitSpec$FadeAndSlide;
+	public static synthetic fun copy-8Feqmps$default (Lcom/rend1x/composeanimatedlist/animation/ExitSpec$FadeAndSlide;FLcom/rend1x/composeanimatedlist/animation/VerticalDirection;IILjava/lang/Object;)Lcom/rend1x/composeanimatedlist/animation/ExitSpec$FadeAndSlide;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDirection ()Lcom/rend1x/composeanimatedlist/animation/VerticalDirection;
+	public final fun getDurationMillis ()I
+	public final fun getOffset-D9Ej5fM ()F
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/rend1x/composeanimatedlist/animation/ExitSpec$None : com/rend1x/composeanimatedlist/animation/ExitSpec {
+	public static final field $stable I
+	public static final field INSTANCE Lcom/rend1x/composeanimatedlist/animation/ExitSpec$None;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/rend1x/composeanimatedlist/animation/ExitSpec$SlideVertical : com/rend1x/composeanimatedlist/animation/ExitSpec {
+	public static final field $stable I
+	public synthetic fun <init> (FLcom/rend1x/composeanimatedlist/animation/VerticalDirection;IILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (FLcom/rend1x/composeanimatedlist/animation/VerticalDirection;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1-D9Ej5fM ()F
+	public final fun component2 ()Lcom/rend1x/composeanimatedlist/animation/VerticalDirection;
+	public final fun component3 ()I
+	public final fun copy-8Feqmps (FLcom/rend1x/composeanimatedlist/animation/VerticalDirection;I)Lcom/rend1x/composeanimatedlist/animation/ExitSpec$SlideVertical;
+	public static synthetic fun copy-8Feqmps$default (Lcom/rend1x/composeanimatedlist/animation/ExitSpec$SlideVertical;FLcom/rend1x/composeanimatedlist/animation/VerticalDirection;IILjava/lang/Object;)Lcom/rend1x/composeanimatedlist/animation/ExitSpec$SlideVertical;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDirection ()Lcom/rend1x/composeanimatedlist/animation/VerticalDirection;
+	public final fun getDurationMillis ()I
+	public final fun getOffset-D9Ej5fM ()F
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class com/rend1x/composeanimatedlist/animation/PlacementBehavior {
+}
+
+public final class com/rend1x/composeanimatedlist/animation/PlacementBehavior$Animated : com/rend1x/composeanimatedlist/animation/PlacementBehavior {
+	public static final field $stable I
+	public fun <init> ()V
+	public fun <init> (I)V
+	public synthetic fun <init> (IILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()I
+	public final fun copy (I)Lcom/rend1x/composeanimatedlist/animation/PlacementBehavior$Animated;
+	public static synthetic fun copy$default (Lcom/rend1x/composeanimatedlist/animation/PlacementBehavior$Animated;IILjava/lang/Object;)Lcom/rend1x/composeanimatedlist/animation/PlacementBehavior$Animated;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDurationMillis ()I
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/rend1x/composeanimatedlist/animation/PlacementBehavior$None : com/rend1x/composeanimatedlist/animation/PlacementBehavior {
+	public static final field $stable I
+	public static final field INSTANCE Lcom/rend1x/composeanimatedlist/animation/PlacementBehavior$None;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/rend1x/composeanimatedlist/animation/VerticalDirection : java/lang/Enum {
+	public static final field Down Lcom/rend1x/composeanimatedlist/animation/VerticalDirection;
+	public static final field Up Lcom/rend1x/composeanimatedlist/animation/VerticalDirection;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/rend1x/composeanimatedlist/animation/VerticalDirection;
+	public static fun values ()[Lcom/rend1x/composeanimatedlist/animation/VerticalDirection;
+}
+
+public final class com/rend1x/composeanimatedlist/state/AnimatedListState {
+	public static final field $stable I
+	public final fun clearExitingNow ()V
+	public final fun isAnimating ()Z
+}
+
+public final class com/rend1x/composeanimatedlist/state/AnimatedListStateKt {
+	public static final fun rememberAnimatedListState (Landroidx/compose/runtime/Composer;I)Lcom/rend1x/composeanimatedlist/state/AnimatedListState;
+}
+
