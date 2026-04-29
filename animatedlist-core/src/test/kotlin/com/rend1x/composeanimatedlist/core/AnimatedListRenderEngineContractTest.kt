@@ -159,6 +159,25 @@ class AnimatedListRenderEngineContractTest {
     }
 
     @Test
+    fun reorderExistingKeys_followsLatestInputOrder() {
+        val engine = strictEngine(
+            listOf(
+                Row("a", "a"),
+                Row("b", "b"),
+                Row("c", "c"),
+            ),
+        )
+
+        engine.update(
+            listOf(Row("c", "c"), Row("a", "a"), Row("b", "b")),
+            key,
+        )
+
+        assertEquals(listOf("c", "a", "b"), engine.items.map { it.key as String })
+        assertTrue(engine.items.all { it.presence == PresenceState.Present })
+    }
+
+    @Test
     fun clearExitingNow_removesOnlyExitingRows() {
         val engine = strictEngine(listOf(Row("a", "1"), Row("b", "2")))
         engine.update(listOf(Row("a", "1")), key)

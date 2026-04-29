@@ -36,7 +36,7 @@ import kotlin.math.roundToInt
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 
-private const val PresentSettleDurationMillis = 120
+private const val MinPresentSettleDurationMillis = 120
 private const val ProgressEpsilon = 1e-4f
 
 /**
@@ -200,6 +200,7 @@ private fun <T> ColumnScope.AnimatedColumnItem(
                     alpha = alpha,
                     translationY = translationY,
                     sizeProgress = sizeProgress,
+                    durationMillis = transitionSpec.presentSettleDurationMillis(),
                 )
 
                 PresenceState.Exiting -> {
@@ -300,28 +301,38 @@ private suspend fun animatePresentSettle(
     alpha: Animatable<Float, *>,
     translationY: Animatable<Float, *>,
     sizeProgress: Animatable<Float, *>,
+    durationMillis: Int,
 ) {
     coroutineScope {
         launch {
             alpha.animateTo(
                 targetValue = 1f,
-                animationSpec = tween(durationMillis = PresentSettleDurationMillis),
+                animationSpec = tween(durationMillis = durationMillis),
             )
         }
         launch {
             translationY.animateTo(
                 targetValue = 0f,
-                animationSpec = tween(durationMillis = PresentSettleDurationMillis),
+                animationSpec = tween(durationMillis = durationMillis),
             )
         }
         launch {
             sizeProgress.animateTo(
                 targetValue = 1f,
-                animationSpec = tween(durationMillis = PresentSettleDurationMillis),
+                animationSpec = tween(durationMillis = durationMillis),
             )
         }
     }
     snapShellToVisibleRest(alpha, translationY, sizeProgress)
+}
+
+private fun AnimatedItemTransitionSpec.presentSettleDurationMillis(): Int {
+    val placementDuration = (placement as? PlacementBehavior.Animated)?.durationMillis ?: 0
+    return maxOf(
+        MinPresentSettleDurationMillis,
+        enter.visibilityAnimationDurationMillis,
+        placementDuration,
+    )
 }
 
 private suspend fun animateExit(
