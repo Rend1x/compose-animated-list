@@ -14,6 +14,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.Movie
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Tune
@@ -82,6 +83,7 @@ fun SampleListScreen() {
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 when (currentPage) {
+                    SamplePage.Recording -> RecordingExamplesPage(modifier = Modifier.weight(1f))
                     SamplePage.Basics -> BasicsExamplesPage(modifier = Modifier.weight(1f))
                     SamplePage.Semantics -> SemanticsExamplesPage(modifier = Modifier.weight(1f))
                     SamplePage.Advanced -> AdvancedExamplesPage(modifier = Modifier.weight(1f))
@@ -197,6 +199,7 @@ private fun SampleTopBar(
 }
 
 private fun samplePageLabel(page: SamplePage): Int = when (page) {
+    SamplePage.Recording -> R.string.page_recording
     SamplePage.Basics -> R.string.page_basics
     SamplePage.Semantics -> R.string.page_semantics
     SamplePage.Advanced -> R.string.page_advanced
@@ -204,6 +207,7 @@ private fun samplePageLabel(page: SamplePage): Int = when (page) {
 }
 
 private fun samplePageIcon(page: SamplePage): ImageVector = when (page) {
+    SamplePage.Recording -> Icons.Filled.Movie
     SamplePage.Basics -> Icons.Filled.Home
     SamplePage.Semantics -> Icons.Filled.AutoAwesome
     SamplePage.Advanced -> Icons.Filled.Tune

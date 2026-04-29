@@ -10,4 +10,4 @@ internal enum class ExitKind { None, Fade, SlideVertical, FadeAndSlide }
 
 internal enum class PlacementKind { None, Animated }
 
-internal enum class SamplePage { Basics, Semantics, Advanced, Stress }
+internal enum class SamplePage { Recording, Basics, Semantics, Advanced, Stress }
