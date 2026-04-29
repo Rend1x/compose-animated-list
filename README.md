@@ -10,15 +10,15 @@ Short recordings from the sample app show the main cases the library is built fo
 
 | Basic insert/remove | Animated vs plain |
 |--------|--------|
-| <video src="docs/demo/basic.webm" controls muted loop playsinline width="260"></video> | <video src="docs/demo/compare.webm" controls muted loop playsinline width="260"></video> |
+| <img src="docs/demo/basic.gif" width="260" alt="Basic insert/remove demo"/> | <img src="docs/demo/compare.gif" width="260" alt="Animated vs plain demo"/> |
 
 | Stable-key shuffle | Many updates |
 |--------|--------|
-| <video src="docs/demo/shuffle.webm" controls muted loop playsinline width="260"></video> | <video src="docs/demo/load.webm" controls muted loop playsinline width="260"></video> |
+| <img src="docs/demo/shuffle.gif" width="260" alt="Stable-key shuffle demo"/> | <img src="docs/demo/load.gif" width="260" alt="Many updates demo"/> |
 
 | Animation variants | Edge cases |
 |--------|--------|
-| <video src="docs/demo/variants.webm" controls muted loop playsinline width="260"></video> | <video src="docs/demo/edges.webm" controls muted loop playsinline width="260"></video> |
+| <img src="docs/demo/variants.gif" width="260" alt="Animation variants demo"/> | <img src="docs/demo/edges.gif" width="260" alt="Edge cases demo"/> |
 
 ## Usage (modifier-first, recommended)
 
