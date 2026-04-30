@@ -5,14 +5,14 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class AnimatedListRenderEngineTest {
-
     @Test
     fun updateSequence_appliesDiffFromPreviousRenderSnapshot() {
-        val engine = AnimatedListRenderEngine(
-            initialItems = listOf("a", "b", "c"),
-            keySelector = { it },
-            keyPolicy = AnimatedListKeyPolicy.Strict,
-        )
+        val engine =
+            AnimatedListRenderEngine(
+                initialItems = listOf("a", "b", "c"),
+                keySelector = { it },
+                keyPolicy = AnimatedListKeyPolicy.Strict,
+            )
         engine.update(listOf("a", "b"), { it })
         assertEquals(listOf("a", "b", "c"), engine.items.map { it.value })
         assertEquals(PresenceState.Exiting, engine.items[2].presence)
@@ -24,11 +24,12 @@ class AnimatedListRenderEngineTest {
 
     @Test
     fun clearExitingNow_dropsExitingRows() {
-        val engine = AnimatedListRenderEngine(
-            initialItems = listOf("a", "b"),
-            keySelector = { it },
-            keyPolicy = AnimatedListKeyPolicy.Strict,
-        )
+        val engine =
+            AnimatedListRenderEngine(
+                initialItems = listOf("a", "b"),
+                keySelector = { it },
+                keyPolicy = AnimatedListKeyPolicy.Strict,
+            )
         engine.update(listOf("a"), { it })
         assertEquals(2, engine.items.size)
         engine.clearExitingNow()
@@ -37,11 +38,12 @@ class AnimatedListRenderEngineTest {
 
     @Test
     fun onExitAnimationFinished_removesExitingKey() {
-        val engine = AnimatedListRenderEngine(
-            initialItems = listOf("x"),
-            keySelector = { it },
-            keyPolicy = AnimatedListKeyPolicy.Strict,
-        )
+        val engine =
+            AnimatedListRenderEngine(
+                initialItems = listOf("x"),
+                keySelector = { it },
+                keyPolicy = AnimatedListKeyPolicy.Strict,
+            )
         engine.update(emptyList(), { it })
         assertEquals(1, engine.items.size)
         engine.onExitAnimationFinished("x")
@@ -50,11 +52,12 @@ class AnimatedListRenderEngineTest {
 
     @Test
     fun onEnterAnimationFinished_marksEnteringKeyPresent() {
-        val engine = AnimatedListRenderEngine(
-            initialItems = listOf("a"),
-            keySelector = { it },
-            keyPolicy = AnimatedListKeyPolicy.Strict,
-        )
+        val engine =
+            AnimatedListRenderEngine(
+                initialItems = listOf("a"),
+                keySelector = { it },
+                keyPolicy = AnimatedListKeyPolicy.Strict,
+            )
         engine.update(listOf("a", "b"), { it })
 
         engine.onEnterAnimationFinished("b")

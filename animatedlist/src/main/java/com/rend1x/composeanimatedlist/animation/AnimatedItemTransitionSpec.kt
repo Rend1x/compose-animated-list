@@ -10,26 +10,19 @@ data class AnimatedItemTransitionSpec(
 )
 
 object AnimatedItemDefaults {
-
-    fun fade(
-        placement: PlacementBehavior = PlacementBehavior.Animated(),
-    ): AnimatedItemTransitionSpec = AnimatedItemTransitionSpec(
+    fun fade(placement: PlacementBehavior = PlacementBehavior.Animated()): AnimatedItemTransitionSpec = AnimatedItemTransitionSpec(
         enter = EnterSpec.Fade(),
         exit = ExitSpec.Fade(),
         placement = placement,
     )
 
-    fun slide(
-        placement: PlacementBehavior = PlacementBehavior.Animated(),
-    ): AnimatedItemTransitionSpec = AnimatedItemTransitionSpec(
+    fun slide(placement: PlacementBehavior = PlacementBehavior.Animated()): AnimatedItemTransitionSpec = AnimatedItemTransitionSpec(
         enter = EnterSpec.SlideVertical(),
         exit = ExitSpec.SlideVertical(),
         placement = placement,
     )
 
-    fun fadeSlide(
-        placement: PlacementBehavior = PlacementBehavior.Animated(),
-    ): AnimatedItemTransitionSpec = AnimatedItemTransitionSpec(
+    fun fadeSlide(placement: PlacementBehavior = PlacementBehavior.Animated()): AnimatedItemTransitionSpec = AnimatedItemTransitionSpec(
         enter = EnterSpec.FadeAndSlide(),
         exit = ExitSpec.FadeAndSlide(),
         placement = placement,

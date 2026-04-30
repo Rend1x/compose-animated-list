@@ -9,29 +9,27 @@ import org.junit.Test
  * diff internals or collection implementation details.
  */
 class AnimatedListRenderEngineContractTest {
-
     private data class Row(val id: String, val payload: String)
 
     private val key: (Row) -> String = { it.id }
 
-    private fun strictEngine(initialItems: List<Row> = emptyList()) =
-        AnimatedListRenderEngine(
-            initialItems = initialItems,
-            keySelector = key,
-            keyPolicy = AnimatedListKeyPolicy.Strict,
-        )
+    private fun strictEngine(initialItems: List<Row> = emptyList()) = AnimatedListRenderEngine(
+        initialItems = initialItems,
+        keySelector = key,
+        keyPolicy = AnimatedListKeyPolicy.Strict,
+    )
 
-    private fun lastWinsEngine(initialItems: List<Row> = emptyList()) =
-        AnimatedListRenderEngine(
-            initialItems = initialItems,
-            keySelector = key,
-            keyPolicy = AnimatedListKeyPolicy.LastWins,
-        )
+    private fun lastWinsEngine(initialItems: List<Row> = emptyList()) = AnimatedListRenderEngine(
+        initialItems = initialItems,
+        keySelector = key,
+        keyPolicy = AnimatedListKeyPolicy.LastWins,
+    )
 
     @Test
     fun identicalConsecutiveUpdates_areIdempotent() {
         val engine = strictEngine(listOf(Row("a", "0")))
         engine.update(listOf(Row("a", "1"), Row("b", "1")), key)
+
         fun snapshot() = engine.items.map { Triple(it.key, it.value, it.presence) }
         val afterFirst = snapshot()
 
@@ -137,13 +135,14 @@ class AnimatedListRenderEngineContractTest {
 
     @Test
     fun mixedRemoveAndInsert_producesDeterministicKeyOrder() {
-        val engine = strictEngine(
-            listOf(
-                Row("a", "a"),
-                Row("b", "b"),
-                Row("c", "c"),
-            ),
-        )
+        val engine =
+            strictEngine(
+                listOf(
+                    Row("a", "a"),
+                    Row("b", "b"),
+                    Row("c", "c"),
+                ),
+            )
         engine.update(
             listOf(Row("a", "a"), Row("d", "d"), Row("c", "c")),
             key,
@@ -160,13 +159,14 @@ class AnimatedListRenderEngineContractTest {
 
     @Test
     fun reorderExistingKeys_followsLatestInputOrder() {
-        val engine = strictEngine(
-            listOf(
-                Row("a", "a"),
-                Row("b", "b"),
-                Row("c", "c"),
-            ),
-        )
+        val engine =
+            strictEngine(
+                listOf(
+                    Row("a", "a"),
+                    Row("b", "b"),
+                    Row("c", "c"),
+                ),
+            )
 
         engine.update(
             listOf(Row("c", "c"), Row("a", "a"), Row("b", "b")),
@@ -216,8 +216,18 @@ class AnimatedListRenderEngineContractTest {
             key,
         )
         assertEquals(listOf("b", "a"), engine.items.map { it.key })
-        assertEquals("last", engine.items.first { it.key == "a" }.value.payload)
-        assertEquals("b", engine.items.first { it.key == "b" }.value.payload)
+        assertEquals(
+            "last",
+            engine.items
+                .first { it.key == "a" }
+                .value.payload,
+        )
+        assertEquals(
+            "b",
+            engine.items
+                .first { it.key == "b" }
+                .value.payload,
+        )
         assertTrue(engine.items.all { it.presence == PresenceState.Entering })
     }
 
@@ -229,7 +239,12 @@ class AnimatedListRenderEngineContractTest {
             key,
         )
         assertEquals(1, engine.items.size)
-        assertEquals("2", engine.items.single().value.payload)
+        assertEquals(
+            "2",
+            engine.items
+                .single()
+                .value.payload,
+        )
         assertEquals(PresenceState.Present, engine.items.single().presence)
     }
 }

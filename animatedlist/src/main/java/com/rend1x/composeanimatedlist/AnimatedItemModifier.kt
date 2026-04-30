@@ -35,10 +35,7 @@ import androidx.compose.ui.unit.dp
  * @param slideRevealOffset Vertical offset at **fully hidden** visibility (`visibilityProgress == 0`); uses
  *   current [LocalDensity] to convert to pixels. Default matches the previous `24f` px default at ~mdpi.
  */
-fun Modifier.animatedItem(
-    scope: AnimatedItemScope,
-    slideRevealOffset: Dp = 24.dp,
-): Modifier = composed {
+fun Modifier.animatedItem(scope: AnimatedItemScope, slideRevealOffset: Dp = 24.dp): Modifier = composed {
     val slideRevealPx = with(LocalDensity.current) { slideRevealOffset.toPx() }
     Modifier.graphicsLayer {
         val p = scope.visibilityProgress

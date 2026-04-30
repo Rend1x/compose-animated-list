@@ -2,8 +2,8 @@ package com.rend1x.composeanimatedlist.sample
 
 import android.util.Log
 import androidx.activity.compose.setContent
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -76,10 +76,7 @@ class ListAnimationComparisonBenchmark {
         }
     }
 
-    private fun measureAllImplementations(
-        workload: UiWorkload,
-        profile: AnimationProfile,
-    ): List<UiScenarioResult> = listOf(
+    private fun measureAllImplementations(workload: UiWorkload, profile: AnimationProfile): List<UiScenarioResult> = listOf(
         measureScenario(ComparisonImplementation.AnimatedColumn, profile, workload),
         measureScenario(ComparisonImplementation.DefaultColumn, profile, workload),
         measureScenario(ComparisonImplementation.LazyColumn, profile, workload),
@@ -146,12 +143,10 @@ class ListAnimationComparisonBenchmark {
         )
     }
 
-    private fun logScenarioResults(
-        scenarioName: String,
-        profile: AnimationProfile,
-        results: List<UiScenarioResult>,
-    ) {
-        val baseline = results.first { it.implementation == ComparisonImplementation.AnimatedColumn }
+    private fun logScenarioResults(scenarioName: String, profile: AnimationProfile, results: List<UiScenarioResult>) {
+        val baseline = results.first {
+            it.implementation == ComparisonImplementation.AnimatedColumn
+        }
         Log.i(LOG_TAG, "Scenario=$scenarioName profile=${profile.label}")
         results.forEach { result ->
             Log.i(
@@ -182,15 +177,9 @@ class ListAnimationComparisonBenchmark {
     }
 }
 
-private data class UiRow(
-    val id: Int,
-    val version: Int,
-)
+private data class UiRow(val id: Int, val version: Int)
 
-private data class UiWorkload(
-    val initialItems: List<UiRow>,
-    val updates: List<List<UiRow>>,
-)
+private data class UiWorkload(val initialItems: List<UiRow>, val updates: List<List<UiRow>>)
 
 private data class UiScenarioResult(
     val implementation: ComparisonImplementation,
@@ -209,33 +198,23 @@ private data class UiSemanticMetrics(
     val avgAmplification: Double,
 )
 
-private class WorkloadController(
-    workload: UiWorkload,
-) {
+private class WorkloadController(workload: UiWorkload) {
     var items by mutableStateOf(workload.initialItems)
 }
 
-private enum class AnimationProfile(
-    val label: String,
-) {
+private enum class AnimationProfile(val label: String) {
     Default("default"),
     Fast("fast"),
 }
 
-private enum class ComparisonImplementation(
-    val label: String,
-) {
+private enum class ComparisonImplementation(val label: String) {
     AnimatedColumn("AnimatedColumn"),
     DefaultColumn("Column+animateContentSize"),
     LazyColumn("LazyColumn+animateItem"),
 }
 
 @Composable
-private fun ComparisonHost(
-    implementation: ComparisonImplementation,
-    profile: AnimationProfile,
-    items: List<UiRow>,
-) {
+private fun ComparisonHost(implementation: ComparisonImplementation, profile: AnimationProfile, items: List<UiRow>) {
     when (implementation) {
         ComparisonImplementation.AnimatedColumn -> {
             when (profile) {
@@ -331,10 +310,7 @@ private fun ComparisonHost(
 }
 
 @Composable
-private fun BenchmarkRowCard(
-    modifier: Modifier,
-    row: UiRow,
-) {
+private fun BenchmarkRowCard(modifier: Modifier, row: UiRow) {
     val shade = 0.15f + (row.version % 5) * 0.08f
     Box(
         modifier = modifier
@@ -346,10 +322,7 @@ private fun BenchmarkRowCard(
     )
 }
 
-private fun windowedChurnWorkload(
-    initialSize: Int,
-    steps: Int,
-): UiWorkload {
+private fun windowedChurnWorkload(initialSize: Int, steps: Int): UiWorkload {
     val initialItems = List(initialSize) { index -> UiRow(id = index, version = 0) }
     val current = initialItems.toMutableList()
     var nextId = initialSize
@@ -374,12 +347,7 @@ private fun windowedChurnWorkload(
     )
 }
 
-private fun reinsertBurstWorkload(
-    initialSize: Int,
-    steps: Int,
-    hotSetSize: Int,
-    seed: Int,
-): UiWorkload {
+private fun reinsertBurstWorkload(initialSize: Int, steps: Int, hotSetSize: Int, seed: Int): UiWorkload {
     val initialItems = List(initialSize) { index -> UiRow(id = index, version = 0) }
     val current = initialItems.toMutableList()
     val random = Random(seed)
@@ -429,19 +397,13 @@ private fun reinsertBurstWorkload(
     )
 }
 
-private fun randomInsertionIndex(
-    random: Random,
-    currentSize: Int,
-): Int = if (currentSize == 0) {
+private fun randomInsertionIndex(random: Random, currentSize: Int): Int = if (currentSize == 0) {
     0
 } else {
     random.nextInt(currentSize + 1)
 }
 
-private fun percentile(
-    sortedValues: List<Double>,
-    fraction: Double,
-): Double {
+private fun percentile(sortedValues: List<Double>, fraction: Double): Double {
     if (sortedValues.isEmpty()) return 0.0
     val index = ceil((sortedValues.size - 1) * fraction).toInt()
     return sortedValues[index.coerceIn(sortedValues.indices)]
@@ -453,11 +415,12 @@ private fun formatRatio(value: Double): String = "%.2fx".format(value)
 
 private fun formatDouble(value: Double): String = "%,.2f".format(value)
 
-private fun semanticMetricsFor(
-    implementation: ComparisonImplementation,
-    workload: UiWorkload,
-): UiSemanticMetrics = when (implementation) {
-    ComparisonImplementation.AnimatedColumn -> retainedExitMetrics(workload, exitRetentionUpdates = 3)
+private fun semanticMetricsFor(implementation: ComparisonImplementation, workload: UiWorkload): UiSemanticMetrics = when (implementation) {
+    ComparisonImplementation.AnimatedColumn -> retainedExitMetrics(
+        workload,
+        exitRetentionUpdates = 3,
+    )
+
     ComparisonImplementation.DefaultColumn,
     ComparisonImplementation.LazyColumn,
     -> UiSemanticMetrics(
@@ -470,10 +433,7 @@ private fun semanticMetricsFor(
     )
 }
 
-private fun retainedExitMetrics(
-    workload: UiWorkload,
-    exitRetentionUpdates: Int,
-): UiSemanticMetrics {
+private fun retainedExitMetrics(workload: UiWorkload, exitRetentionUpdates: Int): UiSemanticMetrics {
     val engine = AnimatedListRenderEngine(
         initialItems = workload.initialItems,
         keySelector = UiRow::id,

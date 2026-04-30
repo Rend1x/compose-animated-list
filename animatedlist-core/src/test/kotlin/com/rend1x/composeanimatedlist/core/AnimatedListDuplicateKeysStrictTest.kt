@@ -4,7 +4,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class AnimatedListDuplicateKeysStrictTest {
-
     private data class Item(val id: String, val payload: String)
 
     private val key: (Item) -> String = { it.id }

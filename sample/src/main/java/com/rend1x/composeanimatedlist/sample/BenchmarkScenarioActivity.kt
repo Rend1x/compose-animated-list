@@ -36,8 +36,8 @@ import com.rend1x.composeanimatedlist.animation.AnimatedItemTransitionSpec
 import com.rend1x.composeanimatedlist.animation.EnterSpec
 import com.rend1x.composeanimatedlist.animation.ExitSpec
 import com.rend1x.composeanimatedlist.animation.PlacementBehavior
-import kotlinx.coroutines.delay
 import kotlin.random.Random
+import kotlinx.coroutines.delay
 
 class BenchmarkScenarioActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -62,12 +62,11 @@ internal data class BenchmarkScenario(
     val profile: BenchmarkProfile,
 )
 
-internal enum class BenchmarkImplementation(
-    val wireValue: String,
-) {
+internal enum class BenchmarkImplementation(val wireValue: String) {
     AnimatedColumn("animated"),
     DefaultColumn("column"),
-    LazyColumn("lazy");
+    LazyColumn("lazy"),
+    ;
 
     companion object {
         fun fromWireValue(value: String?): BenchmarkImplementation = entries.firstOrNull {
@@ -76,11 +75,10 @@ internal enum class BenchmarkImplementation(
     }
 }
 
-internal enum class BenchmarkWorkload(
-    val wireValue: String,
-) {
+internal enum class BenchmarkWorkload(val wireValue: String) {
     ReinsertBurst("reinsert"),
-    WindowedChurn("windowed");
+    WindowedChurn("windowed"),
+    ;
 
     companion object {
         fun fromWireValue(value: String?): BenchmarkWorkload = entries.firstOrNull {
@@ -106,7 +104,8 @@ internal enum class BenchmarkProfile(
         durationMillis = 32,
         stepDelayMillis = 16L,
         settleDelayMillis = 48L,
-    );
+    ),
+    ;
 
     companion object {
         fun fromWireValue(value: String?): BenchmarkProfile = entries.firstOrNull {
@@ -115,20 +114,12 @@ internal enum class BenchmarkProfile(
     }
 }
 
-private data class BenchmarkRowUi(
-    val id: Int,
-    val version: Int,
-)
+private data class BenchmarkRowUi(val id: Int, val version: Int)
 
-private data class BenchmarkWorkloadData(
-    val initialItems: List<BenchmarkRowUi>,
-    val updates: List<List<BenchmarkRowUi>>,
-)
+private data class BenchmarkWorkloadData(val initialItems: List<BenchmarkRowUi>, val updates: List<List<BenchmarkRowUi>>)
 
 @Composable
-internal fun BenchmarkScenarioScreen(
-    scenario: BenchmarkScenario,
-) {
+internal fun BenchmarkScenarioScreen(scenario: BenchmarkScenario) {
     val workload = remember(scenario) { scenario.buildWorkload() }
     var items by remember(scenario) { mutableStateOf(workload.initialItems) }
     var statusText by remember(scenario) { mutableStateOf(BENCHMARK_READY_TEXT) }
@@ -179,11 +170,7 @@ internal fun BenchmarkScenarioScreen(
 }
 
 @Composable
-private fun BenchmarkScenarioList(
-    implementation: BenchmarkImplementation,
-    profile: BenchmarkProfile,
-    items: List<BenchmarkRowUi>,
-) {
+private fun BenchmarkScenarioList(implementation: BenchmarkImplementation, profile: BenchmarkProfile, items: List<BenchmarkRowUi>) {
     when (implementation) {
         BenchmarkImplementation.AnimatedColumn -> {
             AnimatedColumn(
@@ -246,10 +233,7 @@ private fun BenchmarkScenarioList(
 }
 
 @Composable
-private fun BenchmarkScenarioRow(
-    modifier: Modifier,
-    row: BenchmarkRowUi,
-) {
+private fun BenchmarkScenarioRow(modifier: Modifier, row: BenchmarkRowUi) {
     val shade = 0.18f + (row.version % 5) * 0.07f
     Box(
         modifier = modifier
@@ -282,10 +266,7 @@ private fun BenchmarkScenario.buildWorkload(): BenchmarkWorkloadData = when (wor
     )
 }
 
-private fun windowedChurnWorkload(
-    initialSize: Int,
-    steps: Int,
-): BenchmarkWorkloadData {
+private fun windowedChurnWorkload(initialSize: Int, steps: Int): BenchmarkWorkloadData {
     val initialItems = List(initialSize) { index -> BenchmarkRowUi(id = index, version = 0) }
     val current = initialItems.toMutableList()
     var nextId = initialSize
@@ -310,12 +291,7 @@ private fun windowedChurnWorkload(
     )
 }
 
-private fun reinsertBurstWorkload(
-    initialSize: Int,
-    steps: Int,
-    hotSetSize: Int,
-    seed: Int,
-): BenchmarkWorkloadData {
+private fun reinsertBurstWorkload(initialSize: Int, steps: Int, hotSetSize: Int, seed: Int): BenchmarkWorkloadData {
     val initialItems = List(initialSize) { index -> BenchmarkRowUi(id = index, version = 0) }
     val current = initialItems.toMutableList()
     val random = Random(seed)
@@ -365,10 +341,7 @@ private fun reinsertBurstWorkload(
     )
 }
 
-private fun randomInsertionIndex(
-    random: Random,
-    currentSize: Int,
-): Int = if (currentSize == 0) {
+private fun randomInsertionIndex(random: Random, currentSize: Int): Int = if (currentSize == 0) {
     0
 } else {
     random.nextInt(currentSize + 1)
@@ -379,22 +352,18 @@ internal fun Intent.toBenchmarkScenarioOrNull(): BenchmarkScenario? {
         return null
     }
     return BenchmarkScenario(
-    implementation = BenchmarkImplementation.fromWireValue(getStringExtra(EXTRA_IMPLEMENTATION)),
-    workload = BenchmarkWorkload.fromWireValue(getStringExtra(EXTRA_WORKLOAD)),
-    profile = BenchmarkProfile.fromWireValue(getStringExtra(EXTRA_PROFILE)),
-)
+        implementation = BenchmarkImplementation.fromWireValue(getStringExtra(EXTRA_IMPLEMENTATION)),
+        workload = BenchmarkWorkload.fromWireValue(getStringExtra(EXTRA_WORKLOAD)),
+        profile = BenchmarkProfile.fromWireValue(getStringExtra(EXTRA_PROFILE)),
+    )
 }
 
-fun benchmarkScenarioIntent(
-    context: Context,
-    implementation: String,
-    workload: String,
-    profile: String,
-): Intent = Intent(context, BenchmarkScenarioActivity::class.java).apply {
-    putExtra(EXTRA_IMPLEMENTATION, implementation)
-    putExtra(EXTRA_WORKLOAD, workload)
-    putExtra(EXTRA_PROFILE, profile)
-}
+fun benchmarkScenarioIntent(context: Context, implementation: String, workload: String, profile: String): Intent =
+    Intent(context, BenchmarkScenarioActivity::class.java).apply {
+        putExtra(EXTRA_IMPLEMENTATION, implementation)
+        putExtra(EXTRA_WORKLOAD, workload)
+        putExtra(EXTRA_PROFILE, profile)
+    }
 
 internal const val BENCHMARK_DONE_TEXT = "Benchmark complete"
 internal const val BENCHMARK_READY_TEXT = "Benchmark ready"

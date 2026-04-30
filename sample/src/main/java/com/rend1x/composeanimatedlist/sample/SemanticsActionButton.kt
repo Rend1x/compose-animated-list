@@ -18,14 +18,8 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 
-
 @Composable
-internal fun RowScope.SemanticsActionButton(
-    label: String,
-    onClick: () -> Unit,
-    enabled: Boolean,
-    prominent: Boolean = false,
-) {
+internal fun RowScope.SemanticsActionButton(label: String, onClick: () -> Unit, enabled: Boolean, prominent: Boolean = false) {
     val containerColor = when {
         prominent -> MaterialTheme.colorScheme.primaryContainer
         enabled -> MaterialTheme.colorScheme.surface

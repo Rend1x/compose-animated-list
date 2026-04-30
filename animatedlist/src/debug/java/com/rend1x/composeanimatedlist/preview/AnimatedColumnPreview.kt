@@ -142,7 +142,4 @@ private fun DemoItemCard(item: DemoItem, modifier: Modifier = Modifier) {
     }
 }
 
-private data class DemoItem(
-    val id: Int,
-    val title: String,
-)
+private data class DemoItem(val id: Int, val title: String)

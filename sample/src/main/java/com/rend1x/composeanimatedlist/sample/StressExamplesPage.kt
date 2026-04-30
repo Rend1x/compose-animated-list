@@ -9,9 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
 @Composable
-internal fun StressExamplesPage(
-    modifier: Modifier = Modifier,
-) {
+internal fun StressExamplesPage(modifier: Modifier = Modifier) {
     Column(
         modifier = modifier.verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(12.dp),

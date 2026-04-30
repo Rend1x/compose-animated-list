@@ -55,26 +55,21 @@ fun rememberAnimatedListState(): AnimatedListState = remember { AnimatedListStat
  * Compose adapter around [AnimatedListRenderEngine]: mirrors engine snapshots into [mutableStateOf]
  * for recomposition.
  */
-internal class AnimatedListRenderState<T>(
-    initialItems: List<T>,
-    keySelector: (T) -> Any,
-) {
+internal class AnimatedListRenderState<T>(initialItems: List<T>, keySelector: (T) -> Any) {
     private val keyPolicy =
         if (BuildConfig.DEBUG) AnimatedListKeyPolicy.Strict else AnimatedListKeyPolicy.LastWins
 
-    private val engine = AnimatedListRenderEngine(
-        initialItems = initialItems,
-        keySelector = keySelector,
-        keyPolicy = keyPolicy,
-    )
+    private val engine =
+        AnimatedListRenderEngine(
+            initialItems = initialItems,
+            keySelector = keySelector,
+            keyPolicy = keyPolicy,
+        )
 
     var renderItems: List<AnimatedListItem<T>> by mutableStateOf(engine.items)
         private set
 
-    fun update(
-        items: List<T>,
-        keySelector: (T) -> Any,
-    ) {
+    fun update(items: List<T>, keySelector: (T) -> Any) {
         engine.update(items = items, keySelector = keySelector)
         renderItems = engine.items
     }

@@ -5,11 +5,7 @@ package com.rend1x.composeanimatedlist.core
  *
  * Not tied to Compose; snapshot [items] after each mutating call for UI or tests.
  */
-class AnimatedListRenderEngine<T>(
-    initialItems: List<T>,
-    keySelector: (T) -> Any,
-    private val keyPolicy: AnimatedListKeyPolicy,
-) {
+class AnimatedListRenderEngine<T>(initialItems: List<T>, keySelector: (T) -> Any, private val keyPolicy: AnimatedListKeyPolicy) {
     var items: List<AnimatedListItem<T>> = buildInitial(initialItems, keySelector)
         private set
 
@@ -19,39 +15,43 @@ class AnimatedListRenderEngine<T>(
      * insertion/removal, reinsert, key policy, ordering) are documented on [AnimatedListDiffer.diff].
      */
     fun update(items: List<T>, keySelector: (T) -> Any) {
-        this.items = AnimatedListDiffer.diff(
-            current = this.items,
-            newItems = items,
-            keySelector = keySelector,
-            keyPolicy = keyPolicy,
-        )
+        this.items =
+            AnimatedListDiffer.diff(
+                current = this.items,
+                newItems = items,
+                keySelector = keySelector,
+                keyPolicy = keyPolicy,
+            )
     }
 
     fun onExitAnimationFinished(key: Any) {
-        items = items.filterNot { item ->
-            item.key == key && item.presence == PresenceState.Exiting
-        }
+        items =
+            items.filterNot { item ->
+                item.key == key && item.presence == PresenceState.Exiting
+            }
     }
 
     fun onEnterAnimationFinished(key: Any) {
-        items = items.map { item ->
-            if (item.key == key && item.presence == PresenceState.Entering) {
-                item.copy(presence = PresenceState.Present)
-            } else {
-                item
+        items =
+            items.map { item ->
+                if (item.key == key && item.presence == PresenceState.Entering) {
+                    item.copy(presence = PresenceState.Present)
+                } else {
+                    item
+                }
             }
-        }
     }
 
     fun clearExitingNow() {
         items = items.filterNot { it.presence == PresenceState.Exiting }
     }
 
-    private fun buildInitial(
-        initialItems: List<T>,
-        keySelector: (T) -> Any,
-    ): List<AnimatedListItem<T>> {
-        val sanitized = AnimatedListKeys.sanitizeAnimatedListInput(initialItems, keySelector, keyPolicy)
+    private fun buildInitial(initialItems: List<T>, keySelector: (T) -> Any): List<AnimatedListItem<T>> {
+        val sanitized = AnimatedListKeys.sanitizeAnimatedListInput(
+            initialItems,
+            keySelector,
+            keyPolicy,
+        )
         return sanitized.map { item ->
             AnimatedListItem(
                 key = keySelector(item),

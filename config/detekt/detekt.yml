@@ -1,0 +1,28 @@
+complexity:
+  CyclomaticComplexMethod:
+    allowedComplexity: 20
+    excludes:
+      - '**/sample/**'
+  LongMethod:
+    allowedLines: 120
+    excludes:
+      - '**/sample/**'
+  TooManyFunctions:
+    allowedFunctionsPerFile: 20
+    allowedFunctionsPerClass: 20
+
+naming:
+  FunctionNaming:
+    ignoreAnnotated:
+      - Composable
+      - Test
+
+style:
+  MagicNumber:
+    excludes:
+      - '**/sample/**'
+      - '**/test/**'
+      - '**/androidTest/**'
+  MaxLineLength:
+    maxLineLength: 140
+    excludeCommentStatements: true

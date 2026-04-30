@@ -33,9 +33,7 @@ import com.rend1x.composeanimatedlist.animation.AnimatedItemDefaults
 import com.rend1x.composeanimatedlist.state.rememberAnimatedListState
 
 @Composable
-internal fun BasicsExamplesPage(
-    modifier: Modifier = Modifier,
-) {
+internal fun BasicsExamplesPage(modifier: Modifier = Modifier) {
     val items = remember {
         mutableStateListOf<DemoItem>().apply {
             addAll((1..6).map { DemoItem(it) })
@@ -207,4 +205,3 @@ internal fun BasicsExamplesPage(
         }
     }
 }
-

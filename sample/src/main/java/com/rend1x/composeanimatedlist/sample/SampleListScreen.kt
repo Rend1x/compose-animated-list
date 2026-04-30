@@ -14,9 +14,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
-import androidx.compose.material.icons.filled.Movie
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Movie
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.DrawerValue
@@ -95,10 +95,7 @@ fun SampleListScreen() {
 }
 
 @Composable
-private fun SampleNavigationDrawer(
-    currentPage: SamplePage,
-    onPageSelected: (SamplePage) -> Unit,
-) {
+private fun SampleNavigationDrawer(currentPage: SamplePage, onPageSelected: (SamplePage) -> Unit) {
     ModalDrawerSheet(
         modifier = Modifier
             .fillMaxSize()
@@ -163,10 +160,7 @@ private fun SampleNavigationDrawer(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun SampleTopBar(
-    currentPage: SamplePage,
-    onMenuClick: () -> Unit,
-) {
+private fun SampleTopBar(currentPage: SamplePage, onMenuClick: () -> Unit) {
     TopAppBar(
         title = {
             Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {

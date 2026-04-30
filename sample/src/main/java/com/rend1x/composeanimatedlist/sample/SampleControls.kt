@@ -18,10 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
 @Composable
-internal fun PresetRow(
-    label: String,
-    onClick: () -> Unit,
-) {
+internal fun PresetRow(label: String, onClick: () -> Unit) {
     Button(
         modifier = Modifier.fillMaxWidth(),
         onClick = onClick,
@@ -29,12 +26,9 @@ internal fun PresetRow(
         Text(label)
     }
 }
+
 @Composable
-internal fun RadioOptionRow(
-    selected: Boolean,
-    label: String,
-    onClick: () -> Unit,
-) {
+internal fun RadioOptionRow(selected: Boolean, label: String, onClick: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -77,12 +71,7 @@ internal fun DurationSlider(
 }
 
 @Composable
-internal fun FilterButton(
-    selected: Boolean,
-    label: String,
-    onClick: () -> Unit,
-    enabled: Boolean = true,
-) {
+internal fun FilterButton(selected: Boolean, label: String, onClick: () -> Unit, enabled: Boolean = true) {
     Button(
         onClick = onClick,
         enabled = enabled,
@@ -98,12 +87,9 @@ internal fun FilterButton(
         Text(label)
     }
 }
+
 @Composable
-internal fun RowScope.RemoveModeButton(
-    label: String,
-    onClick: () -> Unit,
-    enabled: Boolean,
-) {
+internal fun RowScope.RemoveModeButton(label: String, onClick: () -> Unit, enabled: Boolean) {
     Button(
         modifier = Modifier.weight(1f),
         onClick = onClick,

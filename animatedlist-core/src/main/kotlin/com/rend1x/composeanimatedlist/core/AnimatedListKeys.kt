@@ -9,23 +9,18 @@ package com.rend1x.composeanimatedlist.core
  * of each key.
  */
 object AnimatedListKeys {
-
-    fun <T> sanitizeAnimatedListInput(
-        items: List<T>,
-        keySelector: (T) -> Any,
-        policy: AnimatedListKeyPolicy,
-    ): List<T> = when (policy) {
+    fun <T> sanitizeAnimatedListInput(items: List<T>, keySelector: (T) -> Any, policy: AnimatedListKeyPolicy): List<T> = when (policy) {
         AnimatedListKeyPolicy.Strict -> {
             validateNoDuplicateKeys(items, keySelector)
             items
         }
-        AnimatedListKeyPolicy.LastWins -> deduplicateByKeyLastWins(items, keySelector)
+
+        AnimatedListKeyPolicy.LastWins -> {
+            deduplicateByKeyLastWins(items, keySelector)
+        }
     }
 
-    private fun <T> validateNoDuplicateKeys(
-        items: List<T>,
-        keySelector: (T) -> Any,
-    ) {
+    private fun <T> validateNoDuplicateKeys(items: List<T>, keySelector: (T) -> Any) {
         val firstIndexByKey = linkedMapOf<Any, Int>()
         items.forEachIndexed { index, item ->
             val key = keySelector(item)
@@ -47,8 +42,6 @@ object AnimatedListKeys {
      * Keeps the last occurrence of each key; result order is **increasing index of that last
      * occurrence** in [items] (equivalent to `asReversed().distinctBy(key).asReversed()`).
      */
-    private fun <T> deduplicateByKeyLastWins(
-        items: List<T>,
-        keySelector: (T) -> Any,
-    ): List<T> = items.asReversed().distinctBy { keySelector(it) }.asReversed()
+    private fun <T> deduplicateByKeyLastWins(items: List<T>, keySelector: (T) -> Any): List<T> =
+        items.asReversed().distinctBy { keySelector(it) }.asReversed()
 }

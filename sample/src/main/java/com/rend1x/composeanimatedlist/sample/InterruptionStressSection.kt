@@ -33,9 +33,9 @@ import com.rend1x.composeanimatedlist.animation.AnimatedItemTransitionSpec
 import com.rend1x.composeanimatedlist.animation.EnterSpec
 import com.rend1x.composeanimatedlist.animation.ExitSpec
 import com.rend1x.composeanimatedlist.animation.PlacementBehavior
+import kotlin.random.Random
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
-import kotlin.random.Random
 
 private data class StressItem(val id: Int)
 
@@ -76,7 +76,8 @@ fun InterruptionStressSection() {
                     stressItems.removeAt(i)
                 }
 
-                else -> { /* hold */
+                else -> {
+                    /* hold */
                 }
             }
         }

@@ -1,6 +1,5 @@
 package com.rend1x.composeanimatedlist.sample
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -39,9 +38,7 @@ import com.rend1x.composeanimatedlist.state.rememberAnimatedListState
 import kotlin.random.Random
 
 @Composable
-internal fun AdvancedExamplesPage(
-    modifier: Modifier = Modifier,
-) {
+internal fun AdvancedExamplesPage(modifier: Modifier = Modifier) {
     val items = remember {
         mutableStateListOf<DemoItem>().apply {
             addAll((1..6).map { DemoItem(it) })
@@ -83,7 +80,9 @@ internal fun AdvancedExamplesPage(
         }
         val exit = when (exitKind) {
             ExitKind.None -> ExitSpec.None
+
             ExitKind.Fade -> ExitSpec.Fade(exitDuration)
+
             ExitKind.SlideVertical -> ExitSpec.SlideVertical(
                 exitOffsetDp.dp,
                 exitDirection,
@@ -231,7 +230,8 @@ internal fun AdvancedExamplesPage(
                     value = enterOffsetDp,
                     valueRange = 0..48,
                     onValueChange = { enterOffsetDp = it },
-                    enabled = enterKind == EnterKind.SlideVertical || enterKind == EnterKind.FadeAndSlide,
+                    enabled =
+                    enterKind == EnterKind.SlideVertical || enterKind == EnterKind.FadeAndSlide,
                 )
 
                 HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
@@ -258,7 +258,8 @@ internal fun AdvancedExamplesPage(
                     value = exitOffsetDp,
                     valueRange = 0..48,
                     onValueChange = { exitOffsetDp = it },
-                    enabled = exitKind == ExitKind.SlideVertical || exitKind == ExitKind.FadeAndSlide,
+                    enabled =
+                    exitKind == ExitKind.SlideVertical || exitKind == ExitKind.FadeAndSlide,
                 )
                 Text(
                     text = stringResource(R.string.exit_direction),
@@ -269,13 +270,15 @@ internal fun AdvancedExamplesPage(
                         selected = exitDirection == VerticalDirection.Up,
                         label = stringResource(R.string.direction_up),
                         onClick = { exitDirection = VerticalDirection.Up },
-                        enabled = exitKind == ExitKind.SlideVertical || exitKind == ExitKind.FadeAndSlide,
+                        enabled =
+                        exitKind == ExitKind.SlideVertical || exitKind == ExitKind.FadeAndSlide,
                     )
                     FilterButton(
                         selected = exitDirection == VerticalDirection.Down,
                         label = stringResource(R.string.direction_down),
                         onClick = { exitDirection = VerticalDirection.Down },
-                        enabled = exitKind == ExitKind.SlideVertical || exitKind == ExitKind.FadeAndSlide,
+                        enabled =
+                        exitKind == ExitKind.SlideVertical || exitKind == ExitKind.FadeAndSlide,
                     )
                 }
 
@@ -436,7 +439,6 @@ internal fun AdvancedExamplesPage(
         }
     }
 }
-
 
 private fun enterKindLabel(kind: EnterKind): Int = when (kind) {
     EnterKind.None -> R.string.enter_none

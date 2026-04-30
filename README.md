@@ -1,9 +1,10 @@
 # compose-animated-list
 
 [![Maven Central](https://img.shields.io/maven-central/v/io.github.rend1x/compose-animated-list?label=Maven%20Central)](https://central.sonatype.com/artifact/io.github.rend1x/compose-animated-list)
+[![CI](https://github.com/Rend1x/compose-animated-list/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Rend1x/compose-animated-list/actions/workflows/ci.yml)
 
-Diff-driven animated column for Jetpack Compose. 
-**Default path:** apply row visuals with [`Modifier.animatedItem`](animatedlist/src/main/java/com/rend1x/composeanimatedlist/AnimatedItemModifier.kt) and keep the column on [`AnimatedItemDefaults.none()`](animatedlist/src/main/java/com/rend1x/composeanimatedlist/animation/AnimatedItemTransitionSpec.kt) so motion is not applied twice. 
+Diff-driven animated column for Jetpack Compose.
+**Default path:** apply row visuals with [`Modifier.animatedItem`](animatedlist/src/main/java/com/rend1x/composeanimatedlist/AnimatedItemModifier.kt) and keep the column on [`AnimatedItemDefaults.none()`](animatedlist/src/main/java/com/rend1x/composeanimatedlist/animation/AnimatedItemTransitionSpec.kt) so motion is not applied twice.
 **Advanced path:** use [`ItemPhase`](animatedlist/src/main/java/com/rend1x/composeanimatedlist/ItemPhase.kt) and progress on [`AnimatedItemScope`](animatedlist/src/main/java/com/rend1x/composeanimatedlist/AnimatedItemScope.kt) for custom graphics tied to the column’s own transition spec.
 
 ## Feature Demos

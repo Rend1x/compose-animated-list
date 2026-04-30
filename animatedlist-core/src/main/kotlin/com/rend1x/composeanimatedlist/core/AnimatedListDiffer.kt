@@ -7,7 +7,6 @@ package com.rend1x.composeanimatedlist.core
  * this object is exposed for tests and advanced use.
  */
 object AnimatedListDiffer {
-
     /**
      * Returns the next render list after applying one logical update.
      *
@@ -46,46 +45,54 @@ object AnimatedListDiffer {
         keySelector: (T) -> Any,
         keyPolicy: AnimatedListKeyPolicy,
     ): List<AnimatedListItem<T>> {
-        val sanitizedNewItems = AnimatedListKeys.sanitizeAnimatedListInput(newItems, keySelector, keyPolicy)
+        val sanitizedNewItems = AnimatedListKeys.sanitizeAnimatedListInput(
+            newItems,
+            keySelector,
+            keyPolicy,
+        )
         val newKeyed = sanitizedNewItems.associateByTo(linkedMapOf(), keySelector)
         val newKeys = newKeyed.keys
         val currentByKey = current.associateBy { it.key }
 
-        val render = sanitizedNewItems.mapTo(mutableListOf()) { item ->
-            val key = keySelector(item)
-            val currentItem = currentByKey[key]
-            if (currentItem == null) {
-                AnimatedListItem(
-                    key = key,
-                    value = item,
-                    presence = PresenceState.Entering,
-                )
-            } else {
-                val presence =
-                    if (currentItem.presence == PresenceState.Entering && currentItem.value == item) {
-                        PresenceState.Entering
-                    } else {
-                        PresenceState.Present
-                    }
-                AnimatedListItem(
-                    key = key,
-                    value = item,
-                    presence = presence,
-                )
+        val render =
+            sanitizedNewItems.mapTo(mutableListOf()) { item ->
+                val key = keySelector(item)
+                val currentItem = currentByKey[key]
+                if (currentItem == null) {
+                    AnimatedListItem(
+                        key = key,
+                        value = item,
+                        presence = PresenceState.Entering,
+                    )
+                } else {
+                    val presence =
+                        if (currentItem.presence == PresenceState.Entering &&
+                            currentItem.value == item
+                        ) {
+                            PresenceState.Entering
+                        } else {
+                            PresenceState.Present
+                        }
+                    AnimatedListItem(
+                        key = key,
+                        value = item,
+                        presence = presence,
+                    )
+                }
             }
-        }
 
         current
             .filter { it.key !in newKeys }
             .forEach { exitingItem ->
-                val insertIndex = nearestFollowingSurvivorIndex(
-                    current = current,
-                    render = render,
-                    exitingKey = exitingItem.key,
-                    newKeys = newKeys,
-                ) ?: render.size
+                val insertIndex =
+                    nearestFollowingSurvivorIndex(
+                        current = current,
+                        render = render,
+                        exitingKey = exitingItem.key,
+                        newKeys = newKeys,
+                    ) ?: render.size
                 render.add(insertIndex, exitingItem.copy(presence = PresenceState.Exiting))
-        }
+            }
 
         return render
     }
@@ -100,11 +107,12 @@ private fun <T> nearestFollowingSurvivorIndex(
     val currentIndex = current.indexOfFirst { it.key == exitingKey }
     if (currentIndex < 0) return null
 
-    val followingKey = current
-        .asSequence()
-        .drop(currentIndex + 1)
-        .firstOrNull { it.key in newKeys }
-        ?.key
+    val followingKey =
+        current
+            .asSequence()
+            .drop(currentIndex + 1)
+            .firstOrNull { it.key in newKeys }
+            ?.key
 
     return followingKey?.let { key -> render.indexOfFirst { it.key == key }.takeIf { it >= 0 } }
 }

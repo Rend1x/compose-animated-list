@@ -13,7 +13,6 @@ import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 class ListAnimationMacrobenchmark {
-
     @get:Rule
     val benchmarkRule = MacrobenchmarkRule()
 
@@ -101,34 +100,33 @@ class ListAnimationMacrobenchmark {
         profile = "fast",
     )
 
-    private fun benchmark(
-        implementation: String,
-        workload: String,
-        profile: String,
-    ) {
+    private fun benchmark(implementation: String, workload: String, profile: String) {
         benchmarkRule.measureRepeated(
             packageName = TARGET_PACKAGE,
             metrics = listOf(FrameTimingMetric()),
-            iterations = 7,
+            iterations = BENCHMARK_ITERATIONS,
             compilationMode = CompilationMode.None(),
             setupBlock = {
                 pressHome()
                 killProcess()
             },
         ) {
-            val launchIntent = Intent().apply {
-                action = Intent.ACTION_MAIN
-                setClassName(TARGET_PACKAGE, BENCHMARK_ACTIVITY)
-                putExtra(EXTRA_IMPLEMENTATION, implementation)
-                putExtra(EXTRA_WORKLOAD, workload)
-                putExtra(EXTRA_PROFILE, profile)
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            }
+            val launchIntent =
+                Intent().apply {
+                    action = Intent.ACTION_MAIN
+                    setClassName(TARGET_PACKAGE, BENCHMARK_ACTIVITY)
+                    putExtra(EXTRA_IMPLEMENTATION, implementation)
+                    putExtra(EXTRA_WORKLOAD, workload)
+                    putExtra(EXTRA_PROFILE, profile)
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
 
-            device.executeShellCommand(launchIntent.toUri(Intent.URI_INTENT_SCHEME).toAmStartCommand())
-            device.wait(Until.hasObject(By.text(BENCHMARK_READY_TEXT)), 10_000)
+            device.executeShellCommand(
+                launchIntent.toUri(Intent.URI_INTENT_SCHEME).toAmStartCommand(),
+            )
+            device.wait(Until.hasObject(By.text(BENCHMARK_READY_TEXT)), BENCHMARK_READY_TIMEOUT_MILLIS)
             device.findObject(By.text(BENCHMARK_READY_TEXT))?.click()
-            device.wait(Until.hasObject(By.text(BENCHMARK_DONE_TEXT)), 30_000)
+            device.wait(Until.hasObject(By.text(BENCHMARK_DONE_TEXT)), BENCHMARK_DONE_TIMEOUT_MILLIS)
         }
     }
 }
@@ -138,7 +136,10 @@ private fun String.toAmStartCommand(): String = "am start -W $this"
 private const val TARGET_PACKAGE = "com.rend1x.composeanimatedlist.sample"
 private const val BENCHMARK_ACTIVITY = "com.rend1x.composeanimatedlist.sample.MainActivity"
 private const val BENCHMARK_DONE_TEXT = "Benchmark complete"
+private const val BENCHMARK_DONE_TIMEOUT_MILLIS = 30_000L
+private const val BENCHMARK_ITERATIONS = 7
 private const val BENCHMARK_READY_TEXT = "Benchmark ready"
+private const val BENCHMARK_READY_TIMEOUT_MILLIS = 10_000L
 private const val EXTRA_IMPLEMENTATION = "implementation"
 private const val EXTRA_WORKLOAD = "workload"
 private const val EXTRA_PROFILE = "profile"

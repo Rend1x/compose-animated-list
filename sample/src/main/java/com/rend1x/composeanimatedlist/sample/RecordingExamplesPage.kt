@@ -59,9 +59,7 @@ import com.rend1x.composeanimatedlist.animation.PlacementBehavior
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 
-private enum class RecordingScenario(
-    val label: String,
-) {
+private enum class RecordingScenario(val label: String) {
     Basic("Basic"),
     Compare("Compare"),
     Shuffle("Shuffle"),
@@ -71,17 +69,10 @@ private enum class RecordingScenario(
     Edges("Edges"),
 }
 
-private data class RecordingItem(
-    val id: Int,
-    val title: String,
-    val subtitle: String,
-    val accent: Color,
-)
+private data class RecordingItem(val id: Int, val title: String, val subtitle: String, val accent: Color)
 
 @Composable
-internal fun RecordingExamplesPage(
-    modifier: Modifier = Modifier,
-) {
+internal fun RecordingExamplesPage(modifier: Modifier = Modifier) {
     var currentScenario by remember { mutableStateOf(RecordingScenario.Basic) }
 
     Column(
@@ -480,11 +471,7 @@ private fun EdgeCasesRecordingScenario() {
 }
 
 @Composable
-private fun ScenarioHeader(
-    title: String,
-    subtitle: String,
-    icon: ImageVector,
-) {
+private fun ScenarioHeader(title: String, subtitle: String, icon: ImageVector) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -552,11 +539,7 @@ private fun PrimaryActions(
 }
 
 @Composable
-private fun ComparisonPane(
-    label: String,
-    modifier: Modifier = Modifier,
-    content: @Composable () -> Unit,
-) {
+private fun ComparisonPane(label: String, modifier: Modifier = Modifier, content: @Composable () -> Unit) {
     Column(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -601,11 +584,7 @@ private fun DemoAnimatedList(
 }
 
 @Composable
-private fun DemoRow(
-    item: RecordingItem,
-    modifier: Modifier = Modifier,
-    compact: Boolean = false,
-) {
+private fun DemoRow(item: RecordingItem, modifier: Modifier = Modifier, compact: Boolean = false) {
     Card(
         modifier = modifier,
         shape = RoundedCornerShape(if (compact) 8.dp else 12.dp),
@@ -662,9 +641,7 @@ private fun DemoRow(
 }
 
 @Composable
-private fun rememberRecordingItems(
-    count: Int = 6,
-) = remember {
+private fun rememberRecordingItems(count: Int = 6) = remember {
     mutableStateListOf<RecordingItem>().apply {
         addAll((1..count).map(::recordingItem))
     }
@@ -707,10 +684,7 @@ private fun orderItem(id: Int) = recordingItem(
     accent = demoAccents[id % demoAccents.size],
 )
 
-private enum class AnimationVariant(
-    val label: String,
-    val spec: AnimatedItemTransitionSpec,
-) {
+private enum class AnimationVariant(val label: String, val spec: AnimatedItemTransitionSpec) {
     FadeSlide(
         "Fade + slide",
         AnimatedItemTransitionSpec(

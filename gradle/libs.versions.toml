@@ -12,6 +12,10 @@ activity = "1.13.0"
 composeBom = "2026.03.01"
 binaryCompatibilityValidator = "0.18.1"
 mavenPublish = "0.35.0"
+detekt = "2.0.0-alpha.2"
+ktlint = "1.5.0"
+ktlintGradle = "14.2.0"
+spotless = "8.4.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -44,3 +48,6 @@ android-library = { id = "com.android.library", version.ref = "agp" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 binary-compatibility-validator = { id = "org.jetbrains.kotlinx.binary-compatibility-validator", version.ref = "binaryCompatibilityValidator" }
 maven-publish = { id = "com.vanniktech.maven.publish", version.ref = "mavenPublish" }
+detekt = { id = "dev.detekt", version.ref = "detekt" }
+ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlintGradle" }
+spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }

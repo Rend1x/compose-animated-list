@@ -4,7 +4,6 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class TransitionSpecDurationTest {
-
     @Test
     fun noneSpecs_haveZeroVisibilityDuration() {
         assertEquals(0, EnterSpec.None.visibilityAnimationDurationMillis)
