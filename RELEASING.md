@@ -43,8 +43,8 @@ automatically. The workflow verifies that the tag points to the HEAD of the
 matching release branch, then publishes and releases the artifacts to Maven
 Central.
 
-After the release succeeds, GitHub Actions creates a pull request from the
-release branch back to `main`.
+After the release succeeds, GitHub Actions creates a GitHub Release for the tag
+and then creates a pull request from the release branch back to `main`.
 
 ## Manual Flow
 
@@ -77,5 +77,5 @@ in `gradle.properties`.
 
 Use `automatic_release=false` to publish to Central Portal without releasing,
 or `automatic_release=true` to publish and release immediately. A pull request
-back to `main` is created only after an actual release, so it runs for tag
-releases and manual runs with `automatic_release=true`.
+back to `main` and a GitHub Release are created only after an actual release, so
+they run for tag releases and manual runs with `automatic_release=true`.
