@@ -78,20 +78,29 @@ allprojects {
     }
 }
 
+fun tasksNamedInProjects(name: String) = allprojects.map { project ->
+    project.tasks.matching { task -> task.name == name }
+}
+
 tasks.register("staticAnalysis") {
     group = "verification"
-    description = "Runs detekt, ktlint, Spotless, API validation, and Android lint."
+    description = "Runs detekt, ktlint, and Spotless checks."
     dependsOn(
-        "detekt",
-        "ktlintCheck",
-        "spotlessCheck",
-        ":animatedlist:apiCheck",
-        ":animatedlist-core:apiCheck",
-        subprojects.map { "${it.path}:detekt" },
-        subprojects.map { "${it.path}:ktlintCheck" },
-        subprojects.map { "${it.path}:spotlessCheck" },
-        ":animatedlist:lint",
-        ":sample:lint",
+        tasksNamedInProjects("detekt"),
+        tasksNamedInProjects("ktlintCheck"),
+        tasksNamedInProjects("spotlessCheck"),
+    )
+}
+
+tasks.register("checkAll") {
+    group = "verification"
+    description = "Runs tests, API validation, Android lint, static analysis, and local Maven publishing."
+    dependsOn(
+        "staticAnalysis",
+        tasksNamedInProjects("test"),
+        tasksNamedInProjects("apiCheck"),
+        tasksNamedInProjects("lint"),
+        tasksNamedInProjects("publishToMavenLocal"),
     )
 }
 
