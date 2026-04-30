@@ -127,6 +127,7 @@ tasks.register("releaseTag") {
     doLast {
         val versionName = providers.gradleProperty("VERSION_NAME").get()
         val tagName = "v$versionName"
+        val releaseBranchName = "release/$versionName"
         val shouldPush = providers.gradleProperty("release.push")
             .map(String::toBoolean)
             .getOrElse(false)
@@ -151,6 +152,11 @@ tasks.register("releaseTag") {
             "Working tree is not clean. Commit or stash changes before creating a release tag."
         }
 
+        val currentBranch = gitOutput("branch", "--show-current")
+        check(currentBranch == releaseBranchName) {
+            "Release tag must be created from $releaseBranchName. Current branch is $currentBranch."
+        }
+
         val tagExists = gitExit("rev-parse", "-q", "--verify", "refs/tags/$tagName") == 0
         check(!tagExists) {
             "Tag $tagName already exists."
@@ -159,9 +165,11 @@ tasks.register("releaseTag") {
         git("tag", "-a", tagName, "-m", "Release $tagName")
 
         if (shouldPush) {
+            git("push", "origin", "HEAD:refs/heads/$releaseBranchName")
             git("push", "origin", tagName)
         } else {
             logger.lifecycle("Created tag $tagName locally.")
+            logger.lifecycle("Push the release branch with: git push origin HEAD:refs/heads/$releaseBranchName")
             logger.lifecycle("Push it with: git push origin $tagName")
             logger.lifecycle("Or run: ./gradlew releaseTag -Prelease.push=true")
         }

@@ -23,6 +23,47 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Validate release source
+        shell: bash
+        run: |
+          if [[ "${GITHUB_EVENT_NAME}" == "push" ]]; then
+            tag="${GITHUB_REF_NAME}"
+            version="${tag#v}"
+            branch="release/${version}"
+
+            git fetch --no-tags origin "+refs/heads/${branch}:refs/remotes/origin/${branch}"
+            branch_sha="$(git rev-parse "origin/${branch}")"
+
+            if [[ "${branch_sha}" != "${GITHUB_SHA}" ]]; then
+              echo "Tag ${tag} must point to HEAD of ${branch}."
+              echo "Tag SHA: ${GITHUB_SHA}"
+              echo "Branch SHA: ${branch_sha}"
+              exit 1
+            fi
+          else
+            branch="${GITHUB_REF_NAME}"
+
+            if [[ "${branch}" != release/* ]]; then
+              echo "Manual publish must be run from a release/<version> branch."
+              echo "Current ref: ${branch}"
+              exit 1
+            fi
+
+            version="${branch#release/}"
+          fi
+
+          property_version="$(grep '^VERSION_NAME=' gradle.properties | cut -d= -f2-)"
+
+          if [[ "${property_version}" != "${version}" ]]; then
+            echo "VERSION_NAME must match the release source."
+            echo "VERSION_NAME: ${property_version}"
+            echo "Release version: ${version}"
+            exit 1
+          fi
+
+          branch="release/${version}"
+          echo "Release source is valid: ${branch}, version ${version}."
+
       - name: Set up JDK
         uses: actions/setup-java@v4
         with:
@@ -77,3 +118,49 @@ jobs:
           ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.SIGNING_IN_MEMORY_KEY }}
           ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.SIGNING_IN_MEMORY_KEY_PASSWORD }}
         run: ./gradlew publishAndReleaseToMavenCentral --no-configuration-cache
+
+  create-release-pr:
+    name: Create release PR
+    runs-on: ubuntu-latest
+    needs: publish
+    if: ${{ github.event_name == 'push' || inputs.automatic_release }}
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Create PR to main
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          if [[ "${GITHUB_EVENT_NAME}" == "push" ]]; then
+            version="${GITHUB_REF_NAME#v}"
+            release_branch="release/${version}"
+          else
+            release_branch="${GITHUB_REF_NAME}"
+            version="${release_branch#release/}"
+          fi
+
+          existing_pr="$(
+            gh pr list \
+              --base main \
+              --head "${release_branch}" \
+              --state open \
+              --json number \
+              --jq '.[0].number // empty'
+          )"
+
+          if [[ -n "${existing_pr}" ]]; then
+            echo "Release PR already exists: #${existing_pr}"
+            exit 0
+          fi
+
+          gh pr create \
+            --base main \
+            --head "${release_branch}" \
+            --title "Release ${version}" \
+            --body "Merge release branch ${release_branch} after Maven Central publication succeeds."

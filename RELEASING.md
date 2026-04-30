@@ -1,74 +1,78 @@
 # Releasing
 
 Releases are published by GitHub Actions when a tag matching `v*` is pushed.
-The tag version should match `VERSION_NAME` in `gradle.properties`.
+The tag version must match `VERSION_NAME` in `gradle.properties`, and each
+release must be prepared on a matching release branch: `release/<version>`.
 
-## Manual release
+For example:
 
-1. Update `VERSION_NAME` in `gradle.properties`.
-2. Commit the version change.
-3. Run release checks:
+- `VERSION_NAME=0.1.1`
+- release branch: `release/0.1.1`
+- release tag: `v0.1.1`
+
+## Recommended Flow
+
+1. Create or switch to the release branch:
 
    ```bash
-   ./gradlew releaseCheck
+   git switch -c release/0.1.1
    ```
 
-4. Create and push the release tag:
+2. Update `VERSION_NAME` in `gradle.properties`.
 
-   ```bash
-   git tag -a v0.1.1 -m "Release v0.1.1"
-   git push origin v0.1.1
-   ```
-
-GitHub Actions will publish and release the artifacts to Maven Central.
-
-## Gradle helper
-
-The `releaseTag` task runs `releaseCheck`, verifies that the working tree is
-clean, creates an annotated tag from `VERSION_NAME`, and can optionally push it.
-
-Recommended release flow:
-
-1. Update `VERSION_NAME` in `gradle.properties`.
-2. Commit and push the version change:
+3. Commit the version change:
 
    ```bash
    git add gradle.properties
    git commit -m "Release 0.1.1"
-   git push origin main
    ```
 
-3. Create and push the release tag:
+4. Create and push the release branch and tag:
 
    ```bash
    ./gradlew releaseTag -Prelease.push=true
    ```
 
+The `releaseTag` task runs `releaseCheck`, verifies that the working tree is
+clean, verifies that the current branch is `release/<VERSION_NAME>`, creates an
+annotated tag from `VERSION_NAME`, pushes the release branch, and pushes the
+tag.
+
 After the tag is pushed, GitHub Actions starts the publish workflow
-automatically. The workflow publishes and releases the artifacts to Maven
+automatically. The workflow verifies that the tag points to the HEAD of the
+matching release branch, then publishes and releases the artifacts to Maven
 Central.
+
+After the release succeeds, GitHub Actions creates a pull request from the
+release branch back to `main`.
+
+## Manual Flow
+
+If you do not want `releaseTag` to push automatically:
+
+```bash
+./gradlew releaseTag
+git push origin HEAD:refs/heads/release/0.1.1
+git push origin v0.1.1
+```
+
+The tag must point to the HEAD of `release/0.1.1`. If the branch and tag do not
+match, GitHub Actions fails before publishing.
+
+## Release Gate
 
 The publish job does not start until the release checks pass. Release checks
 include tests, compilation, API checks, lint, and static analysis. If the GitHub
 Actions workflow fails, the release should be considered failed and the
 artifacts were not successfully released.
 
-Create the tag locally:
+## Manual GitHub Actions Run
 
-```bash
-./gradlew releaseTag
-```
+The publish workflow can still be started manually from GitHub Actions, but only
+from a `release/<version>` branch. The branch version must match `VERSION_NAME`
+in `gradle.properties`.
 
-Create and push the tag:
-
-```bash
-./gradlew releaseTag -Prelease.push=true
-```
-
-For example, `VERSION_NAME=0.1.1` creates the tag `v0.1.1`.
-
-## Manual GitHub Actions run
-
-The publish workflow can still be started manually from GitHub Actions.
 Use `automatic_release=false` to publish to Central Portal without releasing,
-or `automatic_release=true` to publish and release immediately.
+or `automatic_release=true` to publish and release immediately. A pull request
+back to `main` is created only after an actual release, so it runs for tag
+releases and manual runs with `automatic_release=true`.
