@@ -46,6 +46,13 @@ Central.
 After the release succeeds, GitHub Actions creates a GitHub Release for the tag
 and then creates a pull request from the release branch back to `main`.
 
+Automatic pull request creation requires this repository setting:
+`Settings -> Actions -> General -> Workflow permissions -> Allow GitHub Actions
+to create and approve pull requests`.
+
+If that setting is disabled, Maven Central publishing and GitHub Release
+creation can still succeed, but the PR must be created manually.
+
 ## Manual Flow
 
 If you do not want `releaseTag` to push automatically:
@@ -58,6 +65,17 @@ git push origin v0.1.1
 
 The tag must point to the HEAD of `release/0.1.1`. If the branch and tag do not
 match, GitHub Actions fails before publishing.
+
+If automatic PR creation is not enabled for GitHub Actions, create the PR
+manually after the release succeeds:
+
+```bash
+gh pr create \
+  --base main \
+  --head release/0.1.1 \
+  --title "Release 0.1.1" \
+  --body "Merge release branch after Maven Central publication succeeded."
+```
 
 ## Release Gate
 
