@@ -29,9 +29,12 @@ The library is published on Maven Central:
 
 ```kotlin
 dependencies {
-    implementation("io.github.rend1x:compose-animated-list:0.1.0")
+    implementation("io.github.rend1x:compose-animated-list:<latest-version>")
 }
 ```
+
+Use the latest version shown in the Maven Central badge at the top of this
+README.
 
 Make sure your project resolves Maven Central:
 
