@@ -77,6 +77,28 @@ class AnimatedListDifferTest {
     }
 
     @Test
+    fun replacingKeyWithSameSizeList_keepsRemovedKeyExiting() {
+        val a = Item("a", "1")
+        val b = Item("b", "1")
+        val current =
+            listOf(
+                AnimatedListItem("a", a, PresenceState.Present),
+            )
+
+        val out =
+            AnimatedListDiffer.diff(
+                current = current,
+                newItems = listOf(b),
+                keySelector = key,
+                keyPolicy = keyPolicy,
+            )
+
+        assertEquals(listOf("b", "a"), out.map { it.key })
+        assertEquals(PresenceState.Entering, out[0].presence)
+        assertEquals(PresenceState.Exiting, out[1].presence)
+    }
+
+    @Test
     fun existingKeys_followNewItemsOrder() {
         val a = Item("a", "1")
         val b = Item("b", "1")

@@ -78,6 +78,19 @@ AnimatedColumn(
 }
 ```
 
+Need the displayed position too? Use the indexed overload:
+
+```kotlin
+AnimatedColumn(
+    items = items,
+    key = { it.id },
+) { item, index ->
+    Text("${index + 1}. ${item.title}")
+}
+```
+
+The index is the current internal render index, so it includes rows retained while exiting.
+
 ### API layers (quick reference)
 
 | Layer | Use when |

@@ -95,6 +95,34 @@ fun <T> AnimatedColumn(
     horizontalAlignment: Alignment.Horizontal = Alignment.Start,
     content: @Composable AnimatedItemScope.(T) -> Unit,
 ) {
+    AnimatedColumn(
+        items = items,
+        key = key,
+        modifier = modifier,
+        state = state,
+        transitionSpec = transitionSpec,
+        horizontalAlignment = horizontalAlignment,
+        content = { item, _ -> content(item) },
+    )
+}
+
+/**
+ * Column-based list with diff-driven enter/exit animations.
+ *
+ * This overload also passes the row's current internal render index to [content]. The index includes
+ * retained [ItemPhase.Exiting] rows until their exit animation finishes or the row is otherwise
+ * cleared from the render state.
+ */
+@Composable
+fun <T> AnimatedColumn(
+    items: List<T>,
+    key: (T) -> Any,
+    modifier: Modifier = Modifier,
+    state: AnimatedListState = rememberAnimatedListState(),
+    transitionSpec: AnimatedItemTransitionSpec = AnimatedItemDefaults.fadeSlide(),
+    horizontalAlignment: Alignment.Horizontal = Alignment.Start,
+    content: @Composable AnimatedItemScope.(T, Int) -> Unit,
+) {
     val renderState = remember { AnimatedListRenderState(initialItems = items, keySelector = key) }
     val exitingKeys = renderState.renderItems
         .asSequence()
@@ -116,10 +144,11 @@ fun <T> AnimatedColumn(
         modifier = modifier,
         horizontalAlignment = horizontalAlignment,
     ) {
-        renderState.renderItems.forEach { renderItem ->
+        renderState.renderItems.forEachIndexed { index, renderItem ->
             composeKey(renderItem.key) {
                 AnimatedColumnItem(
                     item = renderItem,
+                    index = index,
                     listState = state,
                     transitionSpec = transitionSpec,
                     onEnterFinished = { renderState.onEnterAnimationFinished(renderItem.key) },
@@ -134,15 +163,17 @@ fun <T> AnimatedColumn(
 @Composable
 private fun <T> ColumnScope.AnimatedColumnItem(
     item: AnimatedListItem<T>,
+    index: Int,
     listState: AnimatedListState,
     transitionSpec: AnimatedItemTransitionSpec,
     onEnterFinished: () -> Unit,
     onExitFinished: () -> Unit,
-    content: @Composable AnimatedItemScope.(T) -> Unit,
+    content: @Composable AnimatedItemScope.(T, Int) -> Unit,
 ) {
     if (transitionSpec.isNone()) {
         AnimatedColumnItemWithoutShell(
             item = item,
+            index = index,
             onEnterFinished = onEnterFinished,
             onExitFinished = onExitFinished,
             content = content,
@@ -261,16 +292,17 @@ private fun <T> ColumnScope.AnimatedColumnItem(
             visibilityProgress = lifecycle.visibilityProgress,
             placementProgress = lifecycle.placementProgress,
         )
-        scope.content(item.value)
+        scope.content(item.value, index)
     }
 }
 
 @Composable
 private fun <T> ColumnScope.AnimatedColumnItemWithoutShell(
     item: AnimatedListItem<T>,
+    index: Int,
     onEnterFinished: () -> Unit,
     onExitFinished: () -> Unit,
-    content: @Composable AnimatedItemScope.(T) -> Unit,
+    content: @Composable AnimatedItemScope.(T, Int) -> Unit,
 ) {
     val currentOnEnterFinished by rememberUpdatedState(onEnterFinished)
     val currentOnExitFinished by rememberUpdatedState(onExitFinished)
@@ -291,7 +323,7 @@ private fun <T> ColumnScope.AnimatedColumnItemWithoutShell(
             visibilityProgress = 1f,
             placementProgress = 1f,
         )
-        scope.content(item.value)
+        scope.content(item.value, index)
     }
 }
 

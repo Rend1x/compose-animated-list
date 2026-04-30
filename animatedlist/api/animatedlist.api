@@ -1,5 +1,6 @@
 public final class com/rend1x/composeanimatedlist/AnimatedColumnKt {
 	public static final fun AnimatedColumn (Ljava/util/List;Lkotlin/jvm/functions/Function1;Landroidx/compose/ui/Modifier;Lcom/rend1x/composeanimatedlist/state/AnimatedListState;Lcom/rend1x/composeanimatedlist/animation/AnimatedItemTransitionSpec;Landroidx/compose/ui/Alignment$Horizontal;Lkotlin/jvm/functions/Function4;Landroidx/compose/runtime/Composer;II)V
+	public static final fun AnimatedColumn (Ljava/util/List;Lkotlin/jvm/functions/Function1;Landroidx/compose/ui/Modifier;Lcom/rend1x/composeanimatedlist/state/AnimatedListState;Lcom/rend1x/composeanimatedlist/animation/AnimatedItemTransitionSpec;Landroidx/compose/ui/Alignment$Horizontal;Lkotlin/jvm/functions/Function5;Landroidx/compose/runtime/Composer;II)V
 }
 
 public final class com/rend1x/composeanimatedlist/AnimatedItemModifierKt {

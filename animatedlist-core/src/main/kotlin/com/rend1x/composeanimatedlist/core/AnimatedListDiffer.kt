@@ -54,7 +54,7 @@ object AnimatedListDiffer {
         val newKeys = newKeyed.keys
         val currentByKey = current.associateBy { it.key }
 
-        val render =
+        val presentRows =
             sanitizedNewItems.mapTo(mutableListOf()) { item ->
                 val key = keySelector(item)
                 val currentItem = currentByKey[key]
@@ -81,38 +81,39 @@ object AnimatedListDiffer {
                 }
             }
 
-        current
-            .filter { it.key !in newKeys }
-            .forEach { exitingItem ->
-                val insertIndex =
-                    nearestFollowingSurvivorIndex(
-                        current = current,
-                        render = render,
-                        exitingKey = exitingItem.key,
-                        newKeys = newKeys,
-                    ) ?: render.size
-                render.add(insertIndex, exitingItem.copy(presence = PresenceState.Exiting))
+        if (current.all { it.key in newKeys }) return presentRows
+
+        val exitingBeforeSurvivor = linkedMapOf<Any, MutableList<AnimatedListItem<T>>>()
+        val trailingExiting = mutableListOf<AnimatedListItem<T>>()
+        var nextSurvivorKey: Any? = null
+
+        current.asReversed().forEach { currentItem ->
+            if (currentItem.key in newKeys) {
+                nextSurvivorKey = currentItem.key
+            } else {
+                val exitingItem = currentItem.copy(presence = PresenceState.Exiting)
+                val followingKey = nextSurvivorKey
+                if (followingKey == null) {
+                    trailingExiting.add(exitingItem)
+                } else {
+                    exitingBeforeSurvivor
+                        .getOrPut(followingKey) { mutableListOf() }
+                        .add(exitingItem)
+                }
             }
+        }
 
-        return render
+        return buildList(
+            capacity =
+                presentRows.size +
+                    exitingBeforeSurvivor.values.sumOf { it.size } +
+                    trailingExiting.size,
+        ) {
+            presentRows.forEach { row ->
+                exitingBeforeSurvivor[row.key]?.asReversed()?.let(::addAll)
+                add(row)
+            }
+            addAll(trailingExiting.asReversed())
+        }
     }
-}
-
-private fun <T> nearestFollowingSurvivorIndex(
-    current: List<AnimatedListItem<T>>,
-    render: List<AnimatedListItem<T>>,
-    exitingKey: Any,
-    newKeys: Set<Any>,
-): Int? {
-    val currentIndex = current.indexOfFirst { it.key == exitingKey }
-    if (currentIndex < 0) return null
-
-    val followingKey =
-        current
-            .asSequence()
-            .drop(currentIndex + 1)
-            .firstOrNull { it.key in newKeys }
-            ?.key
-
-    return followingKey?.let { key -> render.indexOfFirst { it.key == key }.takeIf { it >= 0 } }
 }
