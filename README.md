@@ -46,7 +46,7 @@ dependencyResolutionManagement {
 
 ## Usage (modifier-first, recommended)
 
-[`AnimatedColumn`](animatedlist/src/main/java/com/rend1x/composeanimatedlist/AnimatedColumn.kt) still runs diffing and lifecycle; [`AnimatedItemDefaults.none()`](animatedlist/src/main/java/com/rend1x/composeanimatedlist/animation/AnimatedItemTransitionSpec.kt) turns off **shell** fade/slide/height so **your** modifier owns how the row appears. If you used a preset such as [`fadeSlide()`](animatedlist/src/main/java/com/rend1x/composeanimatedlist/animation/AnimatedItemTransitionSpec.kt) here **and** [`animatedItem`](animatedlist/src/main/java/com/rend1x/composeanimatedlist/AnimatedItemModifier.kt) on the same surface, both would drive opacity/offset and the animation would look doubled.
+[`AnimatedColumn`](animatedlist/src/main/java/com/rend1x/composeanimatedlist/AnimatedColumn.kt) still runs diffing and lifecycle; [`AnimatedItemDefaults.none()`](animatedlist/src/main/java/com/rend1x/composeanimatedlist/animation/AnimatedItemTransitionSpec.kt) takes a fast path that skips shell `Animatable` state and turns off **shell** fade/slide/height so **your** modifier owns how the row appears. If you used a preset such as [`fadeSlide()`](animatedlist/src/main/java/com/rend1x/composeanimatedlist/animation/AnimatedItemTransitionSpec.kt) here **and** [`animatedItem`](animatedlist/src/main/java/com/rend1x/composeanimatedlist/AnimatedItemModifier.kt) on the same surface, both would drive opacity/offset and the animation would look doubled.
 
 ```kotlin
 import androidx.compose.foundation.layout.fillMaxWidth

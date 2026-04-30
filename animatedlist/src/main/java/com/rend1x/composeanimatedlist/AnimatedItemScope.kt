@@ -16,9 +16,11 @@ import androidx.compose.runtime.Immutable
  *
  * 1. **[phase]** — Coarse lifecycle: [ItemPhase.Entering], [ItemPhase.Visible], or [ItemPhase.Exiting].
  *    Use `when (phase)` for copy, icons, or conditional UI.
- * 2. **Progress trio** — Derived from the same animatables [AnimatedColumn] uses for the row shell
- *    (fade, slide, optional height). They are **normalized completion** in `0f..1f`, not raw pixels or
- *    durations. Use them to align *your* modifiers with the list’s motion.
+ * 2. **Progress trio** — Usually derived from the same animatables [AnimatedColumn] uses for the row shell
+ *    (fade, slide, optional height). With [com.rend1x.composeanimatedlist.animation.AnimatedItemDefaults.none],
+ *    shell animation state is skipped and progress is reported as complete (`1f`). Values are
+ *    **normalized completion** in `0f..1f`, not raw pixels or durations. Use them to align *your*
+ *    modifiers with the list’s motion.
  *
  * **What each progress measures:**
  *

@@ -140,6 +140,16 @@ private fun <T> ColumnScope.AnimatedColumnItem(
     onExitFinished: () -> Unit,
     content: @Composable AnimatedItemScope.(T) -> Unit,
 ) {
+    if (transitionSpec.isNone()) {
+        AnimatedColumnItemWithoutShell(
+            item = item,
+            onEnterFinished = onEnterFinished,
+            onExitFinished = onExitFinished,
+            content = content,
+        )
+        return
+    }
+
     val density = LocalDensity.current
     val currentOnEnterFinished by rememberUpdatedState(onEnterFinished)
     val currentOnExitFinished by rememberUpdatedState(onExitFinished)
@@ -254,6 +264,39 @@ private fun <T> ColumnScope.AnimatedColumnItem(
         scope.content(item.value)
     }
 }
+
+@Composable
+private fun <T> ColumnScope.AnimatedColumnItemWithoutShell(
+    item: AnimatedListItem<T>,
+    onEnterFinished: () -> Unit,
+    onExitFinished: () -> Unit,
+    content: @Composable AnimatedItemScope.(T) -> Unit,
+) {
+    val currentOnEnterFinished by rememberUpdatedState(onEnterFinished)
+    val currentOnExitFinished by rememberUpdatedState(onExitFinished)
+
+    LaunchedEffect(item.presence) {
+        when (item.presence) {
+            PresenceState.Entering -> currentOnEnterFinished()
+            PresenceState.Present -> Unit
+            PresenceState.Exiting -> currentOnExitFinished()
+        }
+    }
+
+    if (item.presence == PresenceState.Exiting) return
+
+    Column {
+        val scope = AnimatedItemScopeImpl(
+            phase = item.presence.toItemPhase(),
+            visibilityProgress = 1f,
+            placementProgress = 1f,
+        )
+        scope.content(item.value)
+    }
+}
+
+private fun AnimatedItemTransitionSpec.isNone(): Boolean =
+    enter == EnterSpec.None && exit == ExitSpec.None && placement == PlacementBehavior.None
 
 private suspend fun animateEnter(
     alpha: Animatable<Float, *>,
