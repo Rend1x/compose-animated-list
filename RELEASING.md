@@ -66,6 +66,9 @@ include tests, compilation, API checks, lint, and static analysis. If the GitHub
 Actions workflow fails, the release should be considered failed and the
 artifacts were not successfully released.
 
+Maven Central publishing can stay in `PUBLISHING` for a while after validation.
+The workflow waits up to 60 minutes before treating that as a timeout.
+
 ## Manual GitHub Actions Run
 
 The publish workflow can still be started manually from GitHub Actions, but only
