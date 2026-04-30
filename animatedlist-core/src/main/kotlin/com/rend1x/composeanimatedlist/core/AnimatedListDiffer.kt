@@ -105,9 +105,9 @@ object AnimatedListDiffer {
 
         return buildList(
             capacity =
-                presentRows.size +
-                    exitingBeforeSurvivor.values.sumOf { it.size } +
-                    trailingExiting.size,
+            presentRows.size +
+                exitingBeforeSurvivor.values.sumOf { it.size } +
+                trailingExiting.size,
         ) {
             presentRows.forEach { row ->
                 exitingBeforeSurvivor[row.key]?.asReversed()?.let(::addAll)

@@ -104,6 +104,70 @@ tasks.register("checkAll") {
     )
 }
 
+tasks.register("releaseCheck") {
+    group = "verification"
+    description = "Runs release verification: tests, compilation, API checks, lint, and static analysis."
+    dependsOn(
+        "staticAnalysis",
+        tasksNamedInProjects("test"),
+        tasksNamedInProjects("apiCheck"),
+        tasksNamedInProjects("lint"),
+        ":animatedlist-core:compileKotlin",
+        ":animatedlist:compileReleaseKotlin",
+        ":sample:compileDebugKotlin",
+    )
+}
+
+tasks.register("releaseTag") {
+    group = "publishing"
+    description = "Runs checks, creates an annotated release tag from VERSION_NAME, and optionally pushes it."
+
+    dependsOn("releaseCheck")
+
+    doLast {
+        val versionName = providers.gradleProperty("VERSION_NAME").get()
+        val tagName = "v$versionName"
+        val shouldPush = providers.gradleProperty("release.push")
+            .map(String::toBoolean)
+            .getOrElse(false)
+
+        fun gitOutput(vararg args: String): String = providers.exec {
+            commandLine("git", *args)
+        }.standardOutput.asText.get().trim()
+
+        fun gitExit(vararg args: String): Int = providers.exec {
+            isIgnoreExitValue = true
+            commandLine("git", *args)
+        }.result.get().exitValue
+
+        fun git(vararg args: String) {
+            providers.exec {
+                commandLine("git", *args)
+            }.result.get().assertNormalExitValue()
+        }
+
+        val status = gitOutput("status", "--porcelain")
+        check(status.isBlank()) {
+            "Working tree is not clean. Commit or stash changes before creating a release tag."
+        }
+
+        val tagExists = gitExit("rev-parse", "-q", "--verify", "refs/tags/$tagName") == 0
+        check(!tagExists) {
+            "Tag $tagName already exists."
+        }
+
+        git("tag", "-a", tagName, "-m", "Release $tagName")
+
+        if (shouldPush) {
+            git("push", "origin", tagName)
+        } else {
+            logger.lifecycle("Created tag $tagName locally.")
+            logger.lifecycle("Push it with: git push origin $tagName")
+            logger.lifecycle("Or run: ./gradlew releaseTag -Prelease.push=true")
+        }
+    }
+}
+
 apiValidation {
     ignoredProjects.addAll(
         listOf(
