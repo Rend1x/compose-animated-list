@@ -1,7 +1,5 @@
 # compose-animated-list
 
-[![Maven Central](https://img.shields.io/maven-central/v/io.github.rend1x/compose-animated-list?label=Maven%20Central)](https://central.sonatype.com/artifact/io.github.rend1x/compose-animated-list)
-
 Diff-driven animated column for Jetpack Compose. 
 **Default path:** apply row visuals with [`Modifier.animatedItem`](animatedlist/src/main/java/com/rend1x/composeanimatedlist/AnimatedItemModifier.kt) and keep the column on [`AnimatedItemDefaults.none()`](animatedlist/src/main/java/com/rend1x/composeanimatedlist/animation/AnimatedItemTransitionSpec.kt) so motion is not applied twice. 
 **Advanced path:** use [`ItemPhase`](animatedlist/src/main/java/com/rend1x/composeanimatedlist/ItemPhase.kt) and progress on [`AnimatedItemScope`](animatedlist/src/main/java/com/rend1x/composeanimatedlist/AnimatedItemScope.kt) for custom graphics tied to the column’s own transition spec.
@@ -22,40 +20,12 @@ Short recordings from the sample app show the main cases the library is built fo
 |--------|--------|
 | <img src="docs/demo/variants.gif" width="260" alt="Animation variants demo"/> | <img src="docs/demo/edges.gif" width="260" alt="Edge cases demo"/> |
 
-## Installation
-
-The library is published on Maven Central:
-
-```kotlin
-dependencies {
-    implementation("io.github.rend1x:compose-animated-list:0.1.0")
-}
-```
-
-Make sure your project resolves Maven Central:
-
-```kotlin
-dependencyResolutionManagement {
-    repositories {
-        google()
-        mavenCentral()
-    }
-}
-```
-
 ## Usage (modifier-first, recommended)
 
 [`AnimatedColumn`](animatedlist/src/main/java/com/rend1x/composeanimatedlist/AnimatedColumn.kt) still runs diffing and lifecycle; [`AnimatedItemDefaults.none()`](animatedlist/src/main/java/com/rend1x/composeanimatedlist/animation/AnimatedItemTransitionSpec.kt) turns off **shell** fade/slide/height so **your** modifier owns how the row appears. If you used a preset such as [`fadeSlide()`](animatedlist/src/main/java/com/rend1x/composeanimatedlist/animation/AnimatedItemTransitionSpec.kt) here **and** [`animatedItem`](animatedlist/src/main/java/com/rend1x/composeanimatedlist/AnimatedItemModifier.kt) on the same surface, both would drive opacity/offset and the animation would look doubled.
 
 ```kotlin
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material3.Card
-import androidx.compose.material3.Text
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.rend1x.composeanimatedlist.AnimatedColumn
-import com.rend1x.composeanimatedlist.ItemPhase
-import com.rend1x.composeanimatedlist.animation.AnimatedItemDefaults
 import com.rend1x.composeanimatedlist.animatedItem
 
 AnimatedColumn(

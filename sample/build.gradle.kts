@@ -47,12 +47,8 @@ android {
     }
 }
 
-val libraryGroup = providers.gradleProperty("GROUP").get()
-val libraryVersion = providers.gradleProperty("VERSION_NAME").get()
-val libraryArtifactId = providers.gradleProperty("POM_ARTIFACT_ID").get()
-
 dependencies {
-    implementation("$libraryGroup:$libraryArtifactId:$libraryVersion")
+    implementation(project(":animatedlist"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
@@ -69,7 +65,7 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 
     testImplementation(libs.junit)
-    androidTestImplementation("$libraryGroup:$libraryArtifactId-core:$libraryVersion")
+    androidTestImplementation(project(":animatedlist-core"))
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     androidTestImplementation(libs.androidx.junit)
