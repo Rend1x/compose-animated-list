@@ -38,6 +38,7 @@ android {
 
 dependencies {
     implementation(project(":animatedlist-core"))
+    lintPublish(project(":animatedlist-lint"))
 
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.animation)

@@ -16,6 +16,7 @@ detekt = "2.0.0-alpha.2"
 ktlint = "1.5.0"
 ktlintGradle = "14.2.0"
 spotless = "8.4.0"
+lint = "31.13.2"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -38,6 +39,9 @@ androidx-compose-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-te
 androidx-compose-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
 androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activity" }
 androidx-test-uiautomator = { group = "androidx.test.uiautomator", name = "uiautomator", version.ref = "uiautomator" }
+android-lint-api = { group = "com.android.tools.lint", name = "lint-api", version.ref = "lint" }
+android-lint-checks = { group = "com.android.tools.lint", name = "lint-checks", version.ref = "lint" }
+android-lint-tests = { group = "com.android.tools.lint", name = "lint-tests", version.ref = "lint" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

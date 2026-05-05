@@ -181,6 +181,7 @@ apiValidation {
         listOf(
             "sample",
             "macrobenchmark",
+            "animatedlist-lint",
         ),
     )
 
