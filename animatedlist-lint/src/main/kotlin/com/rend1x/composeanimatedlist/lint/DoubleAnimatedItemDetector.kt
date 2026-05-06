@@ -15,9 +15,40 @@ import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UQualifiedReferenceExpression
 import org.jetbrains.uast.visitor.AbstractUastVisitor
 
-class DoubleAnimatedItemDetector :
-    Detector(),
-    SourceCodeScanner {
+class DoubleAnimatedItemDetector : Detector(), SourceCodeScanner {
+
+    companion object {
+        private const val ANIMATED_COLUMN = "AnimatedColumn"
+        private const val ANIMATED_ITEM = "animatedItem"
+        private const val ANIMATED_ITEM_OWNER = "com.rend1x.composeanimatedlist.AnimatedItemModifierKt"
+        private const val ANIMATED_ITEM_DEFAULTS = "com.rend1x.composeanimatedlist.animation.AnimatedItemDefaults"
+        private const val MESSAGE = "AnimatedColumn already applies fade/slide with its default or non-none " +
+            "transitionSpec. Use AnimatedItemDefaults.none() on the column or remove Modifier.animatedItem " +
+            "from this row to avoid compounded opacity/offset."
+        private val NONE_TRANSITION_SPEC_REGEX = Regex(
+            pattern = """transitionSpec\s*=.*(?:AnimatedItemDefaults|\.)\.?none\s*\(""",
+            option = RegexOption.DOT_MATCHES_ALL,
+        )
+        private val EXPLICIT_NON_NONE_REGEX = Regex(
+            """AnimatedColumn\s*\([\s\S]*transitionSpec\s*=\s*(?![^\n,)]*\.?none\s*\()[\s\S]*?animatedItem\s*\(""",
+        )
+
+        val ISSUE: Issue = Issue.create(
+            id = "ComposeAnimatedListDoubleAnimation",
+            briefDescription = "AnimatedColumn and Modifier.animatedItem both animate the same row",
+            explanation = "AnimatedColumn defaults to AnimatedItemDefaults.fadeSlide(), which drives row alpha and " +
+                "offset from the list shell. Modifier.animatedItem drives alpha and offset from the item scope too. " +
+                "Using both on the same row compounds the values and can make rows flicker or move too far.",
+            category = Category.CORRECTNESS,
+            priority = 6,
+            severity = Severity.WARNING,
+            implementation = Implementation(
+                DoubleAnimatedItemDetector::class.java,
+                Scope.JAVA_FILE_SCOPE,
+            ),
+        )
+    }
+
     override fun beforeCheckFile(context: Context) {
         val source = context.getContents()?.toString() ?: return
         if (!source.contains(ANIMATED_COLUMN) || !source.contains(ANIMATED_ITEM)) return
@@ -103,37 +134,5 @@ class DoubleAnimatedItemDetector :
         return owner == null ||
             receiverText?.endsWith("Modifier") == true ||
             asSourceString().contains("Modifier.$ANIMATED_ITEM(")
-    }
-
-    companion object {
-        private const val ANIMATED_COLUMN = "AnimatedColumn"
-        private const val ANIMATED_ITEM = "animatedItem"
-        private const val ANIMATED_ITEM_OWNER = "com.rend1x.composeanimatedlist.AnimatedItemModifierKt"
-        private const val ANIMATED_ITEM_DEFAULTS = "com.rend1x.composeanimatedlist.animation.AnimatedItemDefaults"
-        private const val MESSAGE = "AnimatedColumn already applies fade/slide with its default or non-none " +
-            "transitionSpec. Use AnimatedItemDefaults.none() on the column or remove Modifier.animatedItem " +
-            "from this row to avoid compounded opacity/offset."
-        private val NONE_TRANSITION_SPEC_REGEX = Regex(
-            pattern = """transitionSpec\s*=.*(?:AnimatedItemDefaults|\.)\.?none\s*\(""",
-            option = RegexOption.DOT_MATCHES_ALL,
-        )
-        private val EXPLICIT_NON_NONE_REGEX = Regex(
-            """AnimatedColumn\s*\([\s\S]*transitionSpec\s*=\s*(?![^\n,)]*\.?none\s*\()[\s\S]*?animatedItem\s*\(""",
-        )
-
-        val ISSUE: Issue = Issue.create(
-            id = "ComposeAnimatedListDoubleAnimation",
-            briefDescription = "AnimatedColumn and Modifier.animatedItem both animate the same row",
-            explanation = "AnimatedColumn defaults to AnimatedItemDefaults.fadeSlide(), which drives row alpha and " +
-                "offset from the list shell. Modifier.animatedItem drives alpha and offset from the item scope too. " +
-                "Using both on the same row compounds the values and can make rows flicker or move too far.",
-            category = Category.CORRECTNESS,
-            priority = 6,
-            severity = Severity.WARNING,
-            implementation = Implementation(
-                DoubleAnimatedItemDetector::class.java,
-                Scope.JAVA_FILE_SCOPE,
-            ),
-        )
     }
 }
