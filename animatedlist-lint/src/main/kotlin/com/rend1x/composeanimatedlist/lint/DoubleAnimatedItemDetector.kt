@@ -24,6 +24,7 @@ class DoubleAnimatedItemDetector :
         private const val ANIMATED_ITEM = "animatedItem"
         private const val ANIMATED_ITEM_OWNER = "com.rend1x.composeanimatedlist.AnimatedItemModifierKt"
         private const val ANIMATED_ITEM_DEFAULTS = "com.rend1x.composeanimatedlist.animation.AnimatedItemDefaults"
+        private const val ISSUE_PRIORITY = 6
         private const val MESSAGE = "AnimatedColumn already applies fade/slide with its default or non-none " +
             "transitionSpec. Use AnimatedItemDefaults.none() on the column or remove Modifier.animatedItem " +
             "from this row to avoid compounded opacity/offset."
@@ -42,7 +43,7 @@ class DoubleAnimatedItemDetector :
                 "offset from the list shell. Modifier.animatedItem drives alpha and offset from the item scope too. " +
                 "Using both on the same row compounds the values and can make rows flicker or move too far.",
             category = Category.CORRECTNESS,
-            priority = 6,
+            priority = ISSUE_PRIORITY,
             severity = Severity.WARNING,
             implementation = Implementation(
                 DoubleAnimatedItemDetector::class.java,
@@ -76,58 +77,53 @@ class DoubleAnimatedItemDetector :
     }
 
     private fun visitAnimatedColumn(context: JavaContext, node: UCallExpression) {
-        if (!node.isAnimatedColumnCall()) return
-        if (node.usesNoneTransitionSpec()) return
+        val shouldInspect = node.isAnimatedColumnCall() && !node.usesNoneTransitionSpec()
+        if (!shouldInspect) return
 
         val animatedItemCall = node.findAnimatedItemCall()
-        if (animatedItemCall == null && !node.asSourceString().contains("$ANIMATED_ITEM(")) return
+        val reportTarget = animatedItemCall ?: node.takeIf { it.asSourceString().contains("$ANIMATED_ITEM(") }
 
-        context.report(
-            issue = ISSUE,
-            scope = animatedItemCall ?: node,
-            location = context.getLocation(animatedItemCall ?: node),
-            message = MESSAGE,
-        )
+        if (reportTarget != null) {
+            context.report(
+                issue = ISSUE,
+                scope = reportTarget,
+                location = context.getLocation(reportTarget),
+                message = MESSAGE,
+            )
+        }
     }
 
     private fun UCallExpression.isAnimatedColumnCall(): Boolean = methodName == ANIMATED_COLUMN ||
         resolve()?.name == ANIMATED_COLUMN ||
         asSourceString().contains("$ANIMATED_COLUMN(")
 
-    private fun UCallExpression.usesNoneTransitionSpec(): Boolean {
-        val callSource = asSourceString()
-        if (NONE_TRANSITION_SPEC_REGEX.containsMatchIn(callSource)) return true
-
-        val transitionSpec = valueArguments
+    private fun UCallExpression.usesNoneTransitionSpec(): Boolean = NONE_TRANSITION_SPEC_REGEX.containsMatchIn(asSourceString()) ||
+        valueArguments
             .firstOrNull { it.sourcePsi?.text?.startsWith("transitionSpec") == true }
-            ?: return false
-        return transitionSpec.asSourceString().contains("$ANIMATED_ITEM_DEFAULTS.none()") ||
-            transitionSpec.asSourceString().contains("AnimatedItemDefaults.none()")
-    }
+            ?.asSourceString()
+            ?.isNoneTransitionSpecSource()
+            .orFalse()
 
     private fun UCallExpression.findAnimatedItemCall(): UCallExpression? {
         var result: UCallExpression? = null
         accept(
             object : AbstractUastVisitor() {
-                override fun visitCallExpression(node: UCallExpression): Boolean {
-                    if (node == this@findAnimatedItemCall) return super.visitCallExpression(node)
-                    if (
-                        (
-                            node.methodName == ANIMATED_ITEM ||
-                                node.resolve()?.name == ANIMATED_ITEM ||
-                                node.asSourceString().contains(".$ANIMATED_ITEM(")
-                            ) &&
-                        node.isAnimatedItemCall()
-                    ) {
+                override fun visitCallExpression(node: UCallExpression): Boolean = when {
+                    node == this@findAnimatedItemCall -> super.visitCallExpression(node)
+                    node.isAnimatedItemCandidate() && node.isAnimatedItemCall() -> {
                         result = node
-                        return true
+                        true
                     }
-                    return super.visitCallExpression(node)
+                    else -> super.visitCallExpression(node)
                 }
             },
         )
         return result
     }
+
+    private fun UCallExpression.isAnimatedItemCandidate(): Boolean = methodName == ANIMATED_ITEM ||
+        resolve()?.name == ANIMATED_ITEM ||
+        asSourceString().contains(".$ANIMATED_ITEM(")
 
     private fun UCallExpression.isAnimatedItemCall(): Boolean {
         val owner = resolve()?.containingClass?.qualifiedName
@@ -137,4 +133,9 @@ class DoubleAnimatedItemDetector :
             receiverText?.endsWith("Modifier") == true ||
             asSourceString().contains("Modifier.$ANIMATED_ITEM(")
     }
+
+    private fun String.isNoneTransitionSpecSource(): Boolean =
+        contains("$ANIMATED_ITEM_DEFAULTS.none()") || contains("AnimatedItemDefaults.none()")
+
+    private fun Boolean?.orFalse(): Boolean = this == true
 }
