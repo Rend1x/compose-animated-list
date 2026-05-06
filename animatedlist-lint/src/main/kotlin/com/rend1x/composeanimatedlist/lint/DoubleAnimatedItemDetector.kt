@@ -15,7 +15,9 @@ import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UQualifiedReferenceExpression
 import org.jetbrains.uast.visitor.AbstractUastVisitor
 
-class DoubleAnimatedItemDetector : Detector(), SourceCodeScanner {
+class DoubleAnimatedItemDetector :
+    Detector(),
+    SourceCodeScanner {
 
     companion object {
         private const val ANIMATED_COLUMN = "AnimatedColumn"
