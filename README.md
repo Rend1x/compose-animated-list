@@ -49,7 +49,7 @@ dependencyResolutionManagement {
 
 ## Usage (modifier-first, recommended)
 
-[`AnimatedColumn`](animatedlist/src/main/java/com/rend1x/composeanimatedlist/AnimatedColumn.kt) still runs diffing and lifecycle; [`AnimatedItemDefaults.none()`](animatedlist/src/main/java/com/rend1x/composeanimatedlist/animation/AnimatedItemTransitionSpec.kt) takes a fast path that skips shell `Animatable` state and turns off **shell** fade/slide/height so **your** modifier owns how the row appears. If you used a preset such as [`fadeSlide()`](animatedlist/src/main/java/com/rend1x/composeanimatedlist/animation/AnimatedItemTransitionSpec.kt) here **and** [`animatedItem`](animatedlist/src/main/java/com/rend1x/composeanimatedlist/AnimatedItemModifier.kt) on the same surface, both would drive opacity/offset and the animation would look doubled.
+[`AnimatedColumn`](animatedlist/src/main/java/com/rend1x/composeanimatedlist/AnimatedColumn.kt) still runs diffing and lifecycle; [`AnimatedItemDefaults.none()`](animatedlist/src/main/java/com/rend1x/composeanimatedlist/animation/AnimatedItemTransitionSpec.kt) takes a fast path that skips shell `Animatable` state and turns off **shell** fade/slide/height so **your** modifier owns how the row appears. If you used a preset such as [`fadeSlide()`](animatedlist/src/main/java/com/rend1x/composeanimatedlist/animation/AnimatedItemTransitionSpec.kt) here **and** [`animatedItem`](animatedlist/src/main/java/com/rend1x/composeanimatedlist/AnimatedItemModifier.kt) on the same surface, both would drive opacity/offset and the animation would look doubled. The published AAR includes an Android Lint rule that warns in the IDE for the common doubled-animation case: default or non-`none` `transitionSpec` plus `Modifier.animatedItem` inside the row content.
 
 ```kotlin
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -118,6 +118,8 @@ See [`AnimatedItemScope`](animatedlist/src/main/java/com/rend1x/composeanimatedl
 ### Column-driven transitions (optional)
 
 If you prefer the list to own enter/exit motion, pass a non-`none` spec (e.g. [`AnimatedItemDefaults.fadeSlide()`](animatedlist/src/main/java/com/rend1x/composeanimatedlist/animation/AnimatedItemTransitionSpec.kt)) and **omit** [`animatedItem`](animatedlist/src/main/java/com/rend1x/composeanimatedlist/AnimatedItemModifier.kt) on the same surface, or use [`phase`](animatedlist/src/main/java/com/rend1x/composeanimatedlist/ItemPhase.kt) / progress only for extra effects.
+
+The bundled lint warning catches the accidental mix of a column-owned transition and [`Modifier.animatedItem`](animatedlist/src/main/java/com/rend1x/composeanimatedlist/AnimatedItemModifier.kt). Intentional custom effects should use [`phase`](animatedlist/src/main/java/com/rend1x/composeanimatedlist/ItemPhase.kt), [`visibilityProgress`](animatedlist/src/main/java/com/rend1x/composeanimatedlist/AnimatedItemScope.kt), or [`placementProgress`](animatedlist/src/main/java/com/rend1x/composeanimatedlist/AnimatedItemScope.kt) directly.
 
 ### Behavior guarantees
 
