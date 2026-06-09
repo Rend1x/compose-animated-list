@@ -7,6 +7,11 @@ Diff-driven animated column for Jetpack Compose.
 **Default path:** apply row visuals with [`Modifier.animatedItem`](animatedlist/src/main/java/com/rend1x/composeanimatedlist/AnimatedItemModifier.kt) and keep the column on [`AnimatedItemDefaults.none()`](animatedlist/src/main/java/com/rend1x/composeanimatedlist/animation/AnimatedItemTransitionSpec.kt) so motion is not applied twice.
 **Advanced path:** use [`ItemPhase`](animatedlist/src/main/java/com/rend1x/composeanimatedlist/ItemPhase.kt) and progress on [`AnimatedItemScope`](animatedlist/src/main/java/com/rend1x/composeanimatedlist/AnimatedItemScope.kt) for custom graphics tied to the column’s own transition spec.
 
+## Articles
+
+- [Why Jetpack Compose Needs a Better Tool for Small Animated Lists](https://hackernoon.com/why-jetpack-compose-needs-a-better-tool-for-small-animated-lists)
+- [AnimatedColumn: Predictable List Animations in Jetpack Compose Without LazyColumn](https://medium.com/@max.n.grishin/animatedcolumn-predictable-list-animations-in-jetpack-compose-without-lazycolumn-e40d911a009a)
+
 ## Feature Demos
 
 Short recordings from the sample app show the main cases the library is built for: basic list changes, side-by-side comparison, stable-key reorder, heavier update pressure, animation presets, and edge cases.
