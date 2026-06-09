@@ -3,7 +3,7 @@ package com.rend1x.composeanimatedlist
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.Row
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -12,8 +12,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
 import com.rend1x.composeanimatedlist.animation.AnimatedItemDefaults
@@ -32,7 +30,6 @@ import com.rend1x.composeanimatedlist.state.AnimatedListRenderState
 import com.rend1x.composeanimatedlist.state.AnimatedListState
 import com.rend1x.composeanimatedlist.state.rememberAnimatedListState
 import kotlin.math.abs
-import kotlin.math.roundToInt
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 
@@ -123,6 +120,30 @@ fun <T> AnimatedColumn(
     horizontalAlignment: Alignment.Horizontal = Alignment.Start,
     content: @Composable AnimatedItemScope.(T, Int) -> Unit,
 ) {
+    AnimatedListLayout(
+        items = items,
+        key = key,
+        modifier = modifier,
+        state = state,
+        transitionSpec = transitionSpec,
+        horizontalAlignment = horizontalAlignment,
+        orientation = AnimatedListOrientation.Vertical,
+        content = content,
+    )
+}
+
+@Composable
+internal fun <T> AnimatedListLayout(
+    items: List<T>,
+    key: (T) -> Any,
+    modifier: Modifier,
+    state: AnimatedListState,
+    transitionSpec: AnimatedItemTransitionSpec,
+    orientation: AnimatedListOrientation,
+    horizontalAlignment: Alignment.Horizontal = Alignment.Start,
+    verticalAlignment: Alignment.Vertical = Alignment.Top,
+    content: @Composable AnimatedItemScope.(T, Int) -> Unit,
+) {
     val renderState = remember { AnimatedListRenderState(initialItems = items, keySelector = key) }
     val exitingKeys = renderState.renderItems
         .asSequence()
@@ -140,38 +161,66 @@ fun <T> AnimatedColumn(
         }
     }
 
-    Column(
-        modifier = modifier,
-        horizontalAlignment = horizontalAlignment,
-    ) {
-        renderState.renderItems.forEachIndexed { index, renderItem ->
-            composeKey(renderItem.key) {
-                AnimatedColumnItem(
-                    item = renderItem,
-                    index = index,
-                    listState = state,
-                    transitionSpec = transitionSpec,
-                    onEnterFinished = { renderState.onEnterAnimationFinished(renderItem.key) },
-                    onExitFinished = { renderState.onExitAnimationFinished(renderItem.key) },
-                    content = content,
-                )
+    when (orientation) {
+        AnimatedListOrientation.Vertical -> {
+            Column(
+                modifier = modifier,
+                horizontalAlignment = horizontalAlignment,
+            ) {
+                renderState.renderItems.forEachIndexed { index, renderItem ->
+                    composeKey(renderItem.key) {
+                        AnimatedListItem(
+                            item = renderItem,
+                            index = index,
+                            listState = state,
+                            transitionSpec = transitionSpec,
+                            orientation = orientation,
+                            onEnterFinished = { renderState.onEnterAnimationFinished(renderItem.key) },
+                            onExitFinished = { renderState.onExitAnimationFinished(renderItem.key) },
+                            content = content,
+                        )
+                    }
+                }
+            }
+        }
+
+        AnimatedListOrientation.Horizontal -> {
+            Row(
+                modifier = modifier,
+                verticalAlignment = verticalAlignment,
+            ) {
+                renderState.renderItems.forEachIndexed { index, renderItem ->
+                    composeKey(renderItem.key) {
+                        AnimatedListItem(
+                            item = renderItem,
+                            index = index,
+                            listState = state,
+                            transitionSpec = transitionSpec,
+                            orientation = orientation,
+                            onEnterFinished = { renderState.onEnterAnimationFinished(renderItem.key) },
+                            onExitFinished = { renderState.onExitAnimationFinished(renderItem.key) },
+                            content = content,
+                        )
+                    }
+                }
             }
         }
     }
 }
 
 @Composable
-private fun <T> ColumnScope.AnimatedColumnItem(
+private fun <T> AnimatedListItem(
     item: AnimatedListItem<T>,
     index: Int,
     listState: AnimatedListState,
     transitionSpec: AnimatedItemTransitionSpec,
+    orientation: AnimatedListOrientation,
     onEnterFinished: () -> Unit,
     onExitFinished: () -> Unit,
     content: @Composable AnimatedItemScope.(T, Int) -> Unit,
 ) {
     if (transitionSpec.isNone()) {
-        AnimatedColumnItemWithoutShell(
+        AnimatedListItemWithoutShell(
             item = item,
             index = index,
             onEnterFinished = onEnterFinished,
@@ -211,8 +260,8 @@ private fun <T> ColumnScope.AnimatedColumnItem(
     }
 
     val alpha = remember(item.key) { Animatable(initialAlpha) }
-    val translationY = remember(item.key) { Animatable(initialOffsetPx) }
-    val sizeProgress = remember(item.key) {
+    val translation = remember(item.key) { Animatable(initialOffsetPx) }
+    val mainAxisSizeProgress = remember(item.key) {
         val initial = when {
             placement is PlacementBehavior.Animated && item.presence == PresenceState.Entering -> 0f
             else -> 1f
@@ -221,15 +270,15 @@ private fun <T> ColumnScope.AnimatedColumnItem(
     }
 
     // Keys include specs so a new transition runs when they change; continuity is preserved because
-    // [alpha], [translationY], and [sizeProgress] are not reset here—only post-completion snaps apply.
+    // [alpha], [translation], and [mainAxisSizeProgress] are not reset here—only post-completion snaps apply.
     LaunchedEffect(item.presence, transitionSpec.enter, transitionSpec.exit, placement) {
         listState.onAnimationStarted()
         try {
             when (item.presence) {
                 PresenceState.Entering -> animateEnter(
                     alpha = alpha,
-                    translationY = translationY,
-                    sizeProgress = sizeProgress,
+                    translation = translation,
+                    mainAxisSizeProgress = mainAxisSizeProgress,
                     enter = transitionSpec.enter,
                     placement = placement,
                 ).also {
@@ -238,8 +287,8 @@ private fun <T> ColumnScope.AnimatedColumnItem(
 
                 PresenceState.Present -> animatePresentSettle(
                     alpha = alpha,
-                    translationY = translationY,
-                    sizeProgress = sizeProgress,
+                    translation = translation,
+                    mainAxisSizeProgress = mainAxisSizeProgress,
                     durationMillis = transitionSpec.presentSettleDurationMillis(),
                 )
 
@@ -247,8 +296,8 @@ private fun <T> ColumnScope.AnimatedColumnItem(
                     animateExit(
                         density = density,
                         alpha = alpha,
-                        translationY = translationY,
-                        sizeProgress = sizeProgress,
+                        translation = translation,
+                        mainAxisSizeProgress = mainAxisSizeProgress,
                         exit = transitionSpec.exit,
                         placement = placement,
                     )
@@ -261,30 +310,22 @@ private fun <T> ColumnScope.AnimatedColumnItem(
     }
 
     Column(
-        modifier = Modifier
-            .layout { measurable, constraints ->
-                val placeable = measurable.measure(constraints)
-                val width = placeable.width
-                val height = (placeable.height * sizeProgress.value.coerceIn(0f, 1f)).roundToInt()
-                layout(width, height) {
-                    placeable.placeRelative(0, 0)
-                }
-            }
-            .graphicsLayer {
-                this.alpha = alpha.value.coerceIn(0f, 1f)
-                this.translationY = translationY.value
-                clip = true
-            },
+        modifier = Modifier.animatedListShell(
+            orientation = orientation,
+            alpha = alpha.value,
+            translation = translation.value,
+            mainAxisSizeProgress = mainAxisSizeProgress.value,
+        ),
     ) {
         val lifecycle = itemLifecycleProgress(
             presence = item.presence,
             enter = transitionSpec.enter,
             exit = transitionSpec.exit,
             alpha = alpha.value,
-            translationY = translationY.value,
+            translationY = translation.value,
             initialEnterOffsetPx = enterOffsetPx,
             exitTargetOffsetPx = exitOffsetPx,
-            sizeProgress = sizeProgress.value,
+            sizeProgress = mainAxisSizeProgress.value,
             placementAnimated = placementAnimated,
         )
         val scope = AnimatedItemScopeImpl(
@@ -297,7 +338,7 @@ private fun <T> ColumnScope.AnimatedColumnItem(
 }
 
 @Composable
-private fun <T> ColumnScope.AnimatedColumnItemWithoutShell(
+private fun <T> AnimatedListItemWithoutShell(
     item: AnimatedListItem<T>,
     index: Int,
     onEnterFinished: () -> Unit,
@@ -332,8 +373,8 @@ private fun AnimatedItemTransitionSpec.isNone(): Boolean =
 
 private suspend fun animateEnter(
     alpha: Animatable<Float, *>,
-    translationY: Animatable<Float, *>,
-    sizeProgress: Animatable<Float, *>,
+    translation: Animatable<Float, *>,
+    mainAxisSizeProgress: Animatable<Float, *>,
     enter: EnterSpec,
     placement: PlacementBehavior,
 ) {
@@ -345,14 +386,14 @@ private suspend fun animateEnter(
             )
         }
         launch {
-            translationY.animateTo(
+            translation.animateTo(
                 targetValue = 0f,
                 animationSpec = tween(durationMillis = enter.visibilityAnimationDurationMillis),
             )
         }
         launch {
             if (placement is PlacementBehavior.Animated) {
-                sizeProgress.animateTo(
+                mainAxisSizeProgress.animateTo(
                     targetValue = 1f,
                     animationSpec = tween(durationMillis = placement.durationMillis),
                 )
@@ -360,20 +401,20 @@ private suspend fun animateEnter(
                 // PlacementBehavior.None: no separate height channel, but the layout still scales
                 // by [sizeProgress]. Animate from the current value over the visibility duration so
                 // interruptions (e.g. animated → none spec swap) do not jump height.
-                sizeProgress.animateTo(
+                mainAxisSizeProgress.animateTo(
                     targetValue = 1f,
                     animationSpec = tween(durationMillis = enter.visibilityAnimationDurationMillis),
                 )
             }
         }
     }
-    snapShellToVisibleRest(alpha, translationY, sizeProgress)
+    snapShellToVisibleRest(alpha, translation, mainAxisSizeProgress)
 }
 
 private suspend fun animatePresentSettle(
     alpha: Animatable<Float, *>,
-    translationY: Animatable<Float, *>,
-    sizeProgress: Animatable<Float, *>,
+    translation: Animatable<Float, *>,
+    mainAxisSizeProgress: Animatable<Float, *>,
     durationMillis: Int,
 ) {
     coroutineScope {
@@ -384,19 +425,19 @@ private suspend fun animatePresentSettle(
             )
         }
         launch {
-            translationY.animateTo(
+            translation.animateTo(
                 targetValue = 0f,
                 animationSpec = tween(durationMillis = durationMillis),
             )
         }
         launch {
-            sizeProgress.animateTo(
+            mainAxisSizeProgress.animateTo(
                 targetValue = 1f,
                 animationSpec = tween(durationMillis = durationMillis),
             )
         }
     }
-    snapShellToVisibleRest(alpha, translationY, sizeProgress)
+    snapShellToVisibleRest(alpha, translation, mainAxisSizeProgress)
 }
 
 private fun AnimatedItemTransitionSpec.presentSettleDurationMillis(): Int {
@@ -411,8 +452,8 @@ private fun AnimatedItemTransitionSpec.presentSettleDurationMillis(): Int {
 private suspend fun animateExit(
     density: Density,
     alpha: Animatable<Float, *>,
-    translationY: Animatable<Float, *>,
-    sizeProgress: Animatable<Float, *>,
+    translation: Animatable<Float, *>,
+    mainAxisSizeProgress: Animatable<Float, *>,
     exit: ExitSpec,
     placement: PlacementBehavior,
 ) {
@@ -424,28 +465,28 @@ private suspend fun animateExit(
             )
         }
         launch {
-            translationY.animateTo(
+            translation.animateTo(
                 targetValue = with(density) { exit.targetOffsetDp.toPx() },
                 animationSpec = tween(durationMillis = exit.visibilityAnimationDurationMillis),
             )
         }
         launch {
             if (placement is PlacementBehavior.Animated) {
-                sizeProgress.animateTo(
+                mainAxisSizeProgress.animateTo(
                     targetValue = 0f,
                     animationSpec = tween(durationMillis = placement.durationMillis),
                 )
             } else {
                 // Match visibility exit duration so height does not pop to 0 while fade/slide is
                 // still in flight (continuity when [sizeProgress] was mid-range from a prior spec).
-                sizeProgress.animateTo(
+                mainAxisSizeProgress.animateTo(
                     targetValue = 0f,
                     animationSpec = tween(durationMillis = exit.visibilityAnimationDurationMillis),
                 )
             }
         }
     }
-    snapShellToExitRest(alpha, translationY, sizeProgress, exit, density)
+    snapShellToExitRest(alpha, translation, mainAxisSizeProgress, exit, density)
 }
 
 /**
@@ -457,24 +498,24 @@ private suspend fun animateExit(
  */
 private suspend fun snapShellToVisibleRest(
     alpha: Animatable<Float, *>,
-    translationY: Animatable<Float, *>,
-    sizeProgress: Animatable<Float, *>,
+    translation: Animatable<Float, *>,
+    mainAxisSizeProgress: Animatable<Float, *>,
 ) {
     alpha.snapTo(1f)
-    translationY.snapTo(0f)
-    sizeProgress.snapTo(1f)
+    translation.snapTo(0f)
+    mainAxisSizeProgress.snapTo(1f)
 }
 
 private suspend fun snapShellToExitRest(
     alpha: Animatable<Float, *>,
-    translationY: Animatable<Float, *>,
-    sizeProgress: Animatable<Float, *>,
+    translation: Animatable<Float, *>,
+    mainAxisSizeProgress: Animatable<Float, *>,
     exit: ExitSpec,
     density: Density,
 ) {
     alpha.snapTo(exit.targetAlpha)
-    translationY.snapTo(with(density) { exit.targetOffsetDp.toPx() })
-    sizeProgress.snapTo(0f)
+    translation.snapTo(with(density) { exit.targetOffsetDp.toPx() })
+    mainAxisSizeProgress.snapTo(0f)
 }
 
 private fun PresenceState.toItemPhase(): ItemPhase = when (this) {

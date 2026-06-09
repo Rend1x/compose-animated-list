@@ -18,6 +18,8 @@
     <string name="section_easy_path">Easy path (recommended)</string>
     <string name="easy_path_hint">AnimatedItemDefaults.none() on the column and Modifier.animatedItem(this) on each row — no manual progress for a standard fade + slide.</string>
     <string name="section_tags_easy">Easy path: tags</string>
+    <string name="section_animated_row">AnimatedRow: horizontal chips</string>
+    <string name="animated_row_hint">Add, remove, or tap chips to see the same diff lifecycle animated across the row axis.</string>
     <string name="section_advanced_path">Advanced path</string>
     <string name="advanced_path_hint">Tune AnimatedColumn transitionSpec, then drive custom motion from phase and visibilityProgress / placementProgress / progress (below).</string>
     <string name="section_list_advanced">Advanced: tunable list</string>

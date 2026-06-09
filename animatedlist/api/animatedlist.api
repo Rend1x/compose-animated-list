@@ -15,6 +15,11 @@ public abstract interface class com/rend1x/composeanimatedlist/AnimatedItemScope
 	public abstract fun getVisibilityProgress ()F
 }
 
+public final class com/rend1x/composeanimatedlist/AnimatedRowKt {
+	public static final fun AnimatedRow (Ljava/util/List;Lkotlin/jvm/functions/Function1;Landroidx/compose/ui/Modifier;Lcom/rend1x/composeanimatedlist/state/AnimatedListState;Lcom/rend1x/composeanimatedlist/animation/AnimatedItemTransitionSpec;Landroidx/compose/ui/Alignment$Vertical;Lkotlin/jvm/functions/Function4;Landroidx/compose/runtime/Composer;II)V
+	public static final fun AnimatedRow (Ljava/util/List;Lkotlin/jvm/functions/Function1;Landroidx/compose/ui/Modifier;Lcom/rend1x/composeanimatedlist/state/AnimatedListState;Lcom/rend1x/composeanimatedlist/animation/AnimatedItemTransitionSpec;Landroidx/compose/ui/Alignment$Vertical;Lkotlin/jvm/functions/Function5;Landroidx/compose/runtime/Composer;II)V
+}
+
 public final class com/rend1x/composeanimatedlist/ItemPhase : java/lang/Enum {
 	public static final field Entering Lcom/rend1x/composeanimatedlist/ItemPhase;
 	public static final field Exiting Lcom/rend1x/composeanimatedlist/ItemPhase;

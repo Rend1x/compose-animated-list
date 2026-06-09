@@ -21,27 +21,28 @@ class DoubleAnimatedItemDetector :
 
     companion object {
         private const val ANIMATED_COLUMN = "AnimatedColumn"
+        private const val ANIMATED_ROW = "AnimatedRow"
         private const val ANIMATED_ITEM = "animatedItem"
         private const val ANIMATED_ITEM_OWNER = "com.rend1x.composeanimatedlist.AnimatedItemModifierKt"
         private const val ANIMATED_ITEM_DEFAULTS = "com.rend1x.composeanimatedlist.animation.AnimatedItemDefaults"
         private const val ISSUE_PRIORITY = 6
-        private const val MESSAGE = "AnimatedColumn already applies fade/slide with its default or non-none " +
-            "transitionSpec. Use AnimatedItemDefaults.none() on the column or remove Modifier.animatedItem " +
-            "from this row to avoid compounded opacity/offset."
+        private const val MESSAGE = "AnimatedColumn/AnimatedRow already applies fade/slide with its default or " +
+            "non-none transitionSpec. Use AnimatedItemDefaults.none() on the list or remove Modifier.animatedItem " +
+            "from this item to avoid compounded opacity/offset."
         private val NONE_TRANSITION_SPEC_REGEX = Regex(
             pattern = """transitionSpec\s*=.*(?:AnimatedItemDefaults|\.)\.?none\s*\(""",
             option = RegexOption.DOT_MATCHES_ALL,
         )
         private val EXPLICIT_NON_NONE_REGEX = Regex(
-            """AnimatedColumn\s*\([\s\S]*transitionSpec\s*=\s*(?![^\n,)]*\.?none\s*\()[\s\S]*?animatedItem\s*\(""",
+            """Animated(?:Column|Row)\s*\([\s\S]*transitionSpec\s*=\s*(?![^\n,)]*\.?none\s*\()[\s\S]*?animatedItem\s*\(""",
         )
 
         val ISSUE: Issue = Issue.create(
             id = "ComposeAnimatedListDoubleAnimation",
-            briefDescription = "AnimatedColumn and Modifier.animatedItem both animate the same row",
-            explanation = "AnimatedColumn defaults to AnimatedItemDefaults.fadeSlide(), which drives row alpha and " +
+            briefDescription = "Animated list shell and Modifier.animatedItem both animate the same item",
+            explanation = "AnimatedColumn and AnimatedRow default to AnimatedItemDefaults.fadeSlide(), which drives item alpha and " +
                 "offset from the list shell. Modifier.animatedItem drives alpha and offset from the item scope too. " +
-                "Using both on the same row compounds the values and can make rows flicker or move too far.",
+                "Using both on the same item compounds the values and can make items flicker or move too far.",
             category = Category.CORRECTNESS,
             priority = ISSUE_PRIORITY,
             severity = Severity.WARNING,
@@ -54,7 +55,7 @@ class DoubleAnimatedItemDetector :
 
     override fun beforeCheckFile(context: Context) {
         val source = context.getContents()?.toString() ?: return
-        if (!source.contains(ANIMATED_COLUMN) || !source.contains(ANIMATED_ITEM)) return
+        if ((!source.contains(ANIMATED_COLUMN) && !source.contains(ANIMATED_ROW)) || !source.contains(ANIMATED_ITEM)) return
 
         EXPLICIT_NON_NONE_REGEX.findAll(source).forEach { match ->
             val animatedItemIndex = match.value.indexOf("$ANIMATED_ITEM(")
@@ -72,12 +73,12 @@ class DoubleAnimatedItemDetector :
 
     override fun createUastHandler(context: JavaContext): UElementHandler = object : UElementHandler() {
         override fun visitCallExpression(node: UCallExpression) {
-            visitAnimatedColumn(context, node)
+            visitAnimatedList(context, node)
         }
     }
 
-    private fun visitAnimatedColumn(context: JavaContext, node: UCallExpression) {
-        val shouldInspect = node.isAnimatedColumnCall() && !node.usesNoneTransitionSpec()
+    private fun visitAnimatedList(context: JavaContext, node: UCallExpression) {
+        val shouldInspect = node.isAnimatedListCall() && !node.usesNoneTransitionSpec()
         if (!shouldInspect) return
 
         val animatedItemCall = node.findAnimatedItemCall()
@@ -93,9 +94,12 @@ class DoubleAnimatedItemDetector :
         }
     }
 
-    private fun UCallExpression.isAnimatedColumnCall(): Boolean = methodName == ANIMATED_COLUMN ||
+    private fun UCallExpression.isAnimatedListCall(): Boolean = methodName == ANIMATED_COLUMN ||
+        methodName == ANIMATED_ROW ||
         resolve()?.name == ANIMATED_COLUMN ||
-        asSourceString().contains("$ANIMATED_COLUMN(")
+        resolve()?.name == ANIMATED_ROW ||
+        asSourceString().contains("$ANIMATED_COLUMN(") ||
+        asSourceString().contains("$ANIMATED_ROW(")
 
     private fun UCallExpression.usesNoneTransitionSpec(): Boolean = NONE_TRANSITION_SPEC_REGEX.containsMatchIn(asSourceString()) ||
         valueArguments

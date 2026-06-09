@@ -45,9 +45,56 @@ class DoubleAnimatedItemDetectorTest {
             .run()
             .expect(
                 """
-                src/test/pkg/test.kt:14: Warning: AnimatedColumn already applies fade/slide with its default or non-none transitionSpec. Use AnimatedItemDefaults.none() on the column or remove Modifier.animatedItem from this row to avoid compounded opacity/offset. [ComposeAnimatedListDoubleAnimation]
+                src/test/pkg/test.kt:14: Warning: $expectedWarningMessage [ComposeAnimatedListDoubleAnimation]
                         Row(Modifier.animatedItem(this))
                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                0 errors, 1 warnings
+                """.trimIndent(),
+            )
+    }
+
+    @Test
+    fun reportsDefaultRowTransitionSpecWithAnimatedItem() {
+        lint()
+            .allowMissingSdk()
+            .testModes(TestMode.DEFAULT)
+            .files(
+                animatedColumnStub,
+                transitionSpecStub,
+                composeRuntimeStub,
+                composeUiStub,
+                TestFiles.kotlin(
+                    """
+                    package test.pkg
+
+                    import androidx.compose.runtime.Composable
+                    import androidx.compose.ui.Modifier
+                    import com.rend1x.composeanimatedlist.AnimatedRow
+                    import com.rend1x.composeanimatedlist.animatedItem
+
+                    @Composable
+                    fun Sample(items: List<String>) {
+                        AnimatedRow(
+                            items = items,
+                            key = { it },
+                            content = { item ->
+                            Chip(Modifier.animatedItem(this))
+                            },
+                        )
+                    }
+
+                    @Composable
+                    fun Chip(modifier: Modifier) = Unit
+                    """.trimIndent(),
+                ),
+            )
+            .issues(DoubleAnimatedItemDetector.ISSUE)
+            .run()
+            .expect(
+                """
+                src/test/pkg/test.kt:14: Warning: $expectedWarningMessage [ComposeAnimatedListDoubleAnimation]
+                        Chip(Modifier.animatedItem(this))
+                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 0 errors, 1 warnings
                 """.trimIndent(),
             )
@@ -134,6 +181,10 @@ class DoubleAnimatedItemDetectorTest {
             .expectClean()
     }
 
+    private val expectedWarningMessage = "AnimatedColumn/AnimatedRow already applies fade/slide with its default or " +
+        "non-none transitionSpec. Use AnimatedItemDefaults.none() on the list or remove Modifier.animatedItem " +
+        "from this item to avoid compounded opacity/offset."
+
     private val animatedColumnStub = TestFiles.kotlin(
         "src/com/rend1x/composeanimatedlist/AnimatedColumn.kt",
         """
@@ -148,6 +199,15 @@ class DoubleAnimatedItemDetectorTest {
 
         @Composable
         fun <T> AnimatedColumn(
+            items: List<T>,
+            key: (T) -> Any,
+            modifier: Modifier = Modifier,
+            transitionSpec: AnimatedItemTransitionSpec = AnimatedItemDefaults.fadeSlide(),
+            content: @Composable AnimatedItemScope.(T) -> Unit,
+        ) = Unit
+
+        @Composable
+        fun <T> AnimatedRow(
             items: List<T>,
             key: (T) -> Any,
             modifier: Modifier = Modifier,

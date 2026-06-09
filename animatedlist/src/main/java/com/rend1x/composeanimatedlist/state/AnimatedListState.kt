@@ -13,7 +13,8 @@ import com.rend1x.composeanimatedlist.core.AnimatedListKeyPolicy
 import com.rend1x.composeanimatedlist.core.AnimatedListRenderEngine
 
 /**
- * Optional controller for [com.rend1x.composeanimatedlist.AnimatedColumn].
+ * Optional controller for [com.rend1x.composeanimatedlist.AnimatedColumn] and
+ * [com.rend1x.composeanimatedlist.AnimatedRow].
  *
  * **Semantics:**
  * - [isAnimating] is true while at least one item row is running a transition coroutine (enter/exit

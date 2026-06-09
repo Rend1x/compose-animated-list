@@ -28,6 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.rend1x.composeanimatedlist.AnimatedColumn
+import com.rend1x.composeanimatedlist.AnimatedRow
 import com.rend1x.composeanimatedlist.animatedItem
 import com.rend1x.composeanimatedlist.animation.AnimatedItemDefaults
 import com.rend1x.composeanimatedlist.state.rememberAnimatedListState
@@ -54,6 +55,14 @@ internal fun BasicsExamplesPage(modifier: Modifier = Modifier) {
     val tagPool = remember {
         listOf("Kotlin", "Diff", "UI", "Motion", "Samples")
     }
+    val rowTags = remember {
+        mutableStateListOf(
+            TagChip(1, "Alpha"),
+            TagChip(2, "Beta"),
+            TagChip(3, "Gamma"),
+        )
+    }
+    var nextRowTagId by remember { mutableIntStateOf(4) }
     var horizontalCentered by remember { mutableStateOf(true) }
 
     Column(
@@ -201,6 +210,57 @@ internal fun BasicsExamplesPage(modifier: Modifier = Modifier) {
                 ) {
                     Text("+ $label")
                 }
+            }
+        }
+
+        Text(
+            text = stringResource(R.string.section_animated_row),
+            style = MaterialTheme.typography.titleSmall,
+        )
+        Text(
+            text = stringResource(R.string.animated_row_hint),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Button(
+                onClick = {
+                    rowTags.add(TagChip(nextRowTagId, "Chip $nextRowTagId"))
+                    nextRowTagId++
+                },
+            ) {
+                Text(stringResource(R.string.action_add))
+            }
+            Button(
+                onClick = { if (rowTags.isNotEmpty()) rowTags.removeAt(rowTags.lastIndex) },
+                enabled = rowTags.isNotEmpty(),
+            ) {
+                Text(stringResource(R.string.action_remove_last))
+            }
+        }
+        AnimatedRow(
+            items = rowTags.toList(),
+            key = { it.id },
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState()),
+            verticalAlignment = Alignment.CenterVertically,
+        ) { tag ->
+            Surface(
+                modifier = Modifier
+                    .padding(end = 8.dp, top = 4.dp, bottom = 4.dp)
+                    .clickable {
+                        rowTags.remove(tag)
+                    },
+                shape = RoundedCornerShape(20.dp),
+                color = MaterialTheme.colorScheme.tertiaryContainer,
+                shadowElevation = 1.dp,
+            ) {
+                Text(
+                    text = "${tag.label} · ${phase.name}",
+                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
+                    style = MaterialTheme.typography.bodyMedium,
+                )
             }
         }
     }
