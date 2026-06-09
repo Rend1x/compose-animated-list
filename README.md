@@ -2,15 +2,48 @@
 
 [![Maven Central](https://img.shields.io/maven-central/v/io.github.rend1x/compose-animated-list?label=Maven%20Central)](https://central.sonatype.com/artifact/io.github.rend1x/compose-animated-list)
 [![CI](https://github.com/Rend1x/compose-animated-list/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Rend1x/compose-animated-list/actions/workflows/ci.yml)
+[![Hackernoon](https://img.shields.io/badge/Article-Hackernoon-00ff00?logo=hackernoon&logoColor=black)](https://hackernoon.com/why-jetpack-compose-needs-a-better-tool-for-small-animated-lists)
+[![Medium](https://img.shields.io/badge/Article-Medium-000000?logo=medium&logoColor=white)](https://medium.com/@max.n.grishin/animatedcolumn-predictable-list-animations-in-jetpack-compose-without-lazycolumn-e40d911a009a)
 
-Diff-driven animated column for Jetpack Compose.
+Diff-driven animated column for Jetpack Compose, built for small and medium
+non-lazy keyed lists whose rows need a predictable enter/exit/reinsert
+lifecycle.
+
+The main value is not replacing every Compose list. It is making row presence
+explicit and stable under churn: inserts, removals, undo, optimistic updates,
+reorder, queues, and status UI where a disappearing item must stay alive long
+enough to animate out, or recover cleanly if it is reinserted before the exit
+finishes.
+
+For thousands of rows, viewport recycling, paging, or general-purpose scrolling,
+use [`LazyColumn`](https://developer.android.com/develop/ui/compose/lists)
+and its item animation APIs. `AnimatedColumn` is intentionally a specialized
+tool for bounded keyed collections where lifecycle semantics matter more than
+lazy virtualization.
+
 **Default path:** apply row visuals with [`Modifier.animatedItem`](animatedlist/src/main/java/com/rend1x/composeanimatedlist/AnimatedItemModifier.kt) and keep the column on [`AnimatedItemDefaults.none()`](animatedlist/src/main/java/com/rend1x/composeanimatedlist/animation/AnimatedItemTransitionSpec.kt) so motion is not applied twice.
 **Advanced path:** use [`ItemPhase`](animatedlist/src/main/java/com/rend1x/composeanimatedlist/ItemPhase.kt) and progress on [`AnimatedItemScope`](animatedlist/src/main/java/com/rend1x/composeanimatedlist/AnimatedItemScope.kt) for custom graphics tied to the column’s own transition spec.
 
-## Articles
+## Use this when
 
-- [Why Jetpack Compose Needs a Better Tool for Small Animated Lists](https://hackernoon.com/why-jetpack-compose-needs-a-better-tool-for-small-animated-lists)
-- [AnimatedColumn: Predictable List Animations in Jetpack Compose Without LazyColumn](https://medium.com/@max.n.grishin/animatedcolumn-predictable-list-animations-in-jetpack-compose-without-lazycolumn-e40d911a009a)
+- You render a **small or medium non-lazy list** with stable keys.
+- Items frequently enter, leave, return, or reorder under UI churn.
+- Rows represent pending work, upload/download queues, status chips, snackbars,
+  undoable actions, optimistic changes, or short-lived live data.
+- A removed row should remain composed as **Exiting** until its exit animation
+  completes.
+- A row reinserted during exit should recover predictably instead of starting a
+  fresh enter lifecycle.
+- You want one place to reason about row phases: **Entering**, **Visible**, and
+  **Exiting**.
+
+## Don’t use this when
+
+- You need to render thousands of items or an unbounded feed.
+- You need lazy viewport composition, paging, prefetching, or item recycling.
+- `LazyColumn` already gives you the scrolling and animation behavior you need.
+- Your rows do not have stable unique keys.
+- You only need a one-off size change animation around static content.
 
 ## Feature Demos
 
