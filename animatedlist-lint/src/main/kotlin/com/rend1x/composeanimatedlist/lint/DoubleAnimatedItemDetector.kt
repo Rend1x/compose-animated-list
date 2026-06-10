@@ -22,19 +22,28 @@ class DoubleAnimatedItemDetector :
     companion object {
         private const val ANIMATED_COLUMN = "AnimatedColumn"
         private const val ANIMATED_ROW = "AnimatedRow"
-        private const val ANIMATED_ITEM = "animatedItem"
         private const val ANIMATED_ITEM_OWNER = "com.rend1x.composeanimatedlist.AnimatedItemModifierKt"
         private const val ANIMATED_ITEM_DEFAULTS = "com.rend1x.composeanimatedlist.animation.AnimatedItemDefaults"
         private const val ISSUE_PRIORITY = 6
+        private val SHELL_OWNED_HELPERS = setOf(
+            "animatedItem",
+            "animatedItemFadeSlide",
+            "animatedItemCollapse",
+            "animatedItemSharedAxisY",
+            "animatedItemSwipeOut",
+        )
+        private val SHELL_OWNED_HELPER_REGEX = Regex(
+            pattern = """(?:${SHELL_OWNED_HELPERS.joinToString("|")})\s*\(""",
+        )
         private const val MESSAGE = "AnimatedColumn/AnimatedRow already applies fade/slide with its default or " +
-            "non-none transitionSpec. Use AnimatedItemDefaults.none() on the list or remove Modifier.animatedItem " +
-            "from this item to avoid compounded opacity/offset."
+            "non-none transitionSpec. Use AnimatedItemDefaults.none() on the list or remove modifier-first " +
+            "animated item helpers from this item to avoid compounded opacity/offset/placement."
         private val NONE_TRANSITION_SPEC_REGEX = Regex(
             pattern = """transitionSpec\s*=.*(?:AnimatedItemDefaults|\.)\.?none\s*\(""",
             option = RegexOption.DOT_MATCHES_ALL,
         )
         private val EXPLICIT_NON_NONE_REGEX = Regex(
-            """Animated(?:Column|Row)\s*\([\s\S]*transitionSpec\s*=\s*(?![^\n,)]*\.?none\s*\()[\s\S]*?animatedItem\s*\(""",
+            """Animated(?:Column|Row)\s*\([\s\S]*transitionSpec\s*=\s*(?![^\n,)]*\.?none\s*\()[\s\S]*?${SHELL_OWNED_HELPER_REGEX.pattern}""",
         )
 
         val ISSUE: Issue = Issue.create(
@@ -55,15 +64,19 @@ class DoubleAnimatedItemDetector :
 
     override fun beforeCheckFile(context: Context) {
         val source = context.getContents()?.toString() ?: return
-        if ((!source.contains(ANIMATED_COLUMN) && !source.contains(ANIMATED_ROW)) || !source.contains(ANIMATED_ITEM)) return
+        if ((!source.contains(ANIMATED_COLUMN) && !source.contains(ANIMATED_ROW)) ||
+            !SHELL_OWNED_HELPER_REGEX.containsMatchIn(source)
+        ) {
+            return
+        }
 
         EXPLICIT_NON_NONE_REGEX.findAll(source).forEach { match ->
-            val animatedItemIndex = match.value.indexOf("$ANIMATED_ITEM(")
-            if (animatedItemIndex < 0) return@forEach
-            val start = match.range.first + animatedItemIndex
+            val helperMatch = SHELL_OWNED_HELPER_REGEX.find(match.value) ?: return@forEach
+            val helperName = helperMatch.value.substringBefore("(")
+            val start = match.range.first + helperMatch.range.first
             context.report(
                 ISSUE,
-                Location.create(context.file, source, start, start + ANIMATED_ITEM.length),
+                Location.create(context.file, source, start, start + helperName.length),
                 MESSAGE,
             )
         }
@@ -82,7 +95,7 @@ class DoubleAnimatedItemDetector :
         if (!shouldInspect) return
 
         val animatedItemCall = node.findAnimatedItemCall()
-        val reportTarget = animatedItemCall ?: node.takeIf { it.asSourceString().contains("$ANIMATED_ITEM(") }
+        val reportTarget = animatedItemCall ?: node.takeIf { SHELL_OWNED_HELPER_REGEX.containsMatchIn(it.asSourceString()) }
 
         if (reportTarget != null) {
             context.report(
@@ -125,9 +138,10 @@ class DoubleAnimatedItemDetector :
         return result
     }
 
-    private fun UCallExpression.isAnimatedItemCandidate(): Boolean = methodName == ANIMATED_ITEM ||
-        resolve()?.name == ANIMATED_ITEM ||
-        asSourceString().contains(".$ANIMATED_ITEM(")
+    private fun UCallExpression.isAnimatedItemCandidate(): Boolean =
+        methodName in SHELL_OWNED_HELPERS ||
+            resolve()?.name in SHELL_OWNED_HELPERS ||
+            SHELL_OWNED_HELPER_REGEX.containsMatchIn(asSourceString())
 
     private fun UCallExpression.isAnimatedItemCall(): Boolean {
         val owner = resolve()?.containingClass?.qualifiedName
@@ -135,7 +149,7 @@ class DoubleAnimatedItemDetector :
         val receiverText = (uastParent as? UQualifiedReferenceExpression)?.receiver?.asSourceString()
         return owner == null ||
             receiverText?.endsWith("Modifier") == true ||
-            asSourceString().contains("Modifier.$ANIMATED_ITEM(")
+            SHELL_OWNED_HELPERS.any { asSourceString().contains("Modifier.$it(") }
     }
 
     private fun String.isNoneTransitionSpecSource(): Boolean =

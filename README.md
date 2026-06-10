@@ -137,8 +137,22 @@ The index is the current internal render index, so it includes rows retained whi
 | Layer | Use when |
 |--------|-----------|
 | **`Modifier.animatedItem(scope, …)`** | Normal rows: fade + slide from [`visibilityProgress`](animatedlist/src/main/java/com/rend1x/composeanimatedlist/AnimatedItemScope.kt) without hand-writing [`graphicsLayer`](https://developer.android.com/reference/kotlin/androidx/compose/ui/Modifier#(androidx.compose.ui.Modifier).graphicsLayer(kotlin.Function1)). Pair with **`AnimatedItemDefaults.none()`** on the column. |
+| **Named modifier helpers** | Use [`animatedItemFadeSlide`](animatedlist/src/main/java/com/rend1x/composeanimatedlist/AnimatedItemModifier.kt), [`animatedItemScale`](animatedlist/src/main/java/com/rend1x/composeanimatedlist/AnimatedItemModifier.kt), [`animatedItemCollapse`](animatedlist/src/main/java/com/rend1x/composeanimatedlist/AnimatedItemModifier.kt), [`animatedItemSharedAxisY`](animatedlist/src/main/java/com/rend1x/composeanimatedlist/AnimatedItemModifier.kt), or [`animatedItemSwipeOut`](animatedlist/src/main/java/com/rend1x/composeanimatedlist/AnimatedItemModifier.kt) when you want a named preset instead of custom `graphicsLayer` code. `animatedItem` remains the recommended default alias for fade + slide. |
 | **`phase`** | Lifecycle copy, icons, conditional UI ([`ItemPhase`](animatedlist/src/main/java/com/rend1x/composeanimatedlist/ItemPhase.kt)). |
 | **`visibilityProgress` / `placementProgress` / `progress`** | Custom motion, or aligning your own [`graphicsLayer`](https://developer.android.com/reference/kotlin/androidx/compose/ui/Modifier#(androidx.compose.ui.Modifier).graphicsLayer(kotlin.Function1)) with the column’s **non-none** [`AnimatedItemTransitionSpec`](animatedlist/src/main/java/com/rend1x/composeanimatedlist/animation/AnimatedItemTransitionSpec.kt). |
+
+Named helpers are intentionally small:
+
+```kotlin
+Modifier
+    .animatedItemCollapse(this)      // layout size only
+    .animatedItemFadeSlide(this)     // alpha + translationY
+    .animatedItemScale(this)         // scale only
+```
+
+Combine helpers only when they own different properties. For example, `animatedItemScale` is safe with
+`animatedItemFadeSlide`; `animatedItemFadeSlide` and `animatedItemSharedAxisY` both write alpha/translationY, so
+choose one. `animatedItemSwipeOut(fade = false)` can be used when another helper already owns alpha.
 
 ### Item lifecycle
 

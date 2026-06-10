@@ -181,9 +181,96 @@ class DoubleAnimatedItemDetectorTest {
             .expectClean()
     }
 
+    @Test
+    fun reportsDefaultTransitionSpecWithNamedModifierFirstHelper() {
+        lint()
+            .allowMissingSdk()
+            .testModes(TestMode.DEFAULT)
+            .files(
+                animatedColumnStub,
+                transitionSpecStub,
+                composeRuntimeStub,
+                composeUiStub,
+                TestFiles.kotlin(
+                    """
+                    package test.pkg
+
+                    import androidx.compose.runtime.Composable
+                    import androidx.compose.ui.Modifier
+                    import com.rend1x.composeanimatedlist.AnimatedColumn
+                    import com.rend1x.composeanimatedlist.animatedItemFadeSlide
+
+                    @Composable
+                    fun Sample(items: List<String>) {
+                        AnimatedColumn(
+                            items = items,
+                            key = { it },
+                            content = {
+                            Row(Modifier.animatedItemFadeSlide(this))
+                            },
+                        )
+                    }
+
+                    @Composable
+                    fun Row(modifier: Modifier) = Unit
+                    """.trimIndent(),
+                ),
+            )
+            .issues(DoubleAnimatedItemDetector.ISSUE)
+            .run()
+            .expect(
+                """
+                src/test/pkg/test.kt:14: Warning: $expectedWarningMessage [ComposeAnimatedListDoubleAnimation]
+                        Row(Modifier.animatedItemFadeSlide(this))
+                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                0 errors, 1 warnings
+                """.trimIndent(),
+            )
+    }
+
+    @Test
+    fun allowsScaleHelperWithShellOwnedAnimation() {
+        lint()
+            .allowMissingSdk()
+            .testModes(TestMode.DEFAULT)
+            .files(
+                animatedColumnStub,
+                transitionSpecStub,
+                composeRuntimeStub,
+                composeUiStub,
+                TestFiles.kotlin(
+                    """
+                    package test.pkg
+
+                    import androidx.compose.runtime.Composable
+                    import androidx.compose.ui.Modifier
+                    import com.rend1x.composeanimatedlist.AnimatedColumn
+                    import com.rend1x.composeanimatedlist.animatedItemScale
+
+                    @Composable
+                    fun Sample(items: List<String>) {
+                        AnimatedColumn(
+                            items = items,
+                            key = { it },
+                            content = {
+                            Row(Modifier.animatedItemScale(this))
+                            },
+                        )
+                    }
+
+                    @Composable
+                    fun Row(modifier: Modifier) = Unit
+                    """.trimIndent(),
+                ),
+            )
+            .issues(DoubleAnimatedItemDetector.ISSUE)
+            .run()
+            .expectClean()
+    }
+
     private val expectedWarningMessage = "AnimatedColumn/AnimatedRow already applies fade/slide with its default or " +
-        "non-none transitionSpec. Use AnimatedItemDefaults.none() on the list or remove Modifier.animatedItem " +
-        "from this item to avoid compounded opacity/offset."
+        "non-none transitionSpec. Use AnimatedItemDefaults.none() on the list or remove modifier-first " +
+        "animated item helpers from this item to avoid compounded opacity/offset/placement."
 
     private val animatedColumnStub = TestFiles.kotlin(
         "src/com/rend1x/composeanimatedlist/AnimatedColumn.kt",
@@ -216,6 +303,11 @@ class DoubleAnimatedItemDetectorTest {
         ) = Unit
 
         fun Modifier.animatedItem(scope: AnimatedItemScope): Modifier = this
+        fun Modifier.animatedItemFadeSlide(scope: AnimatedItemScope): Modifier = this
+        fun Modifier.animatedItemCollapse(scope: AnimatedItemScope): Modifier = this
+        fun Modifier.animatedItemSharedAxisY(scope: AnimatedItemScope): Modifier = this
+        fun Modifier.animatedItemSwipeOut(scope: AnimatedItemScope): Modifier = this
+        fun Modifier.animatedItemScale(scope: AnimatedItemScope): Modifier = this
         """.trimIndent(),
     )
 

@@ -6,6 +6,16 @@ public final class com/rend1x/composeanimatedlist/AnimatedColumnKt {
 public final class com/rend1x/composeanimatedlist/AnimatedItemModifierKt {
 	public static final fun animatedItem-wH6b6FI (Landroidx/compose/ui/Modifier;Lcom/rend1x/composeanimatedlist/AnimatedItemScope;F)Landroidx/compose/ui/Modifier;
 	public static synthetic fun animatedItem-wH6b6FI$default (Landroidx/compose/ui/Modifier;Lcom/rend1x/composeanimatedlist/AnimatedItemScope;FILjava/lang/Object;)Landroidx/compose/ui/Modifier;
+	public static final fun animatedItemCollapse (Landroidx/compose/ui/Modifier;Lcom/rend1x/composeanimatedlist/AnimatedItemScope;Z)Landroidx/compose/ui/Modifier;
+	public static synthetic fun animatedItemCollapse$default (Landroidx/compose/ui/Modifier;Lcom/rend1x/composeanimatedlist/AnimatedItemScope;ZILjava/lang/Object;)Landroidx/compose/ui/Modifier;
+	public static final fun animatedItemFadeSlide-wH6b6FI (Landroidx/compose/ui/Modifier;Lcom/rend1x/composeanimatedlist/AnimatedItemScope;F)Landroidx/compose/ui/Modifier;
+	public static synthetic fun animatedItemFadeSlide-wH6b6FI$default (Landroidx/compose/ui/Modifier;Lcom/rend1x/composeanimatedlist/AnimatedItemScope;FILjava/lang/Object;)Landroidx/compose/ui/Modifier;
+	public static final fun animatedItemScale-xw-wwJg (Landroidx/compose/ui/Modifier;Lcom/rend1x/composeanimatedlist/AnimatedItemScope;FFJ)Landroidx/compose/ui/Modifier;
+	public static synthetic fun animatedItemScale-xw-wwJg$default (Landroidx/compose/ui/Modifier;Lcom/rend1x/composeanimatedlist/AnimatedItemScope;FFJILjava/lang/Object;)Landroidx/compose/ui/Modifier;
+	public static final fun animatedItemSharedAxisY-d8LSEHM (Landroidx/compose/ui/Modifier;Lcom/rend1x/composeanimatedlist/AnimatedItemScope;FZ)Landroidx/compose/ui/Modifier;
+	public static synthetic fun animatedItemSharedAxisY-d8LSEHM$default (Landroidx/compose/ui/Modifier;Lcom/rend1x/composeanimatedlist/AnimatedItemScope;FZILjava/lang/Object;)Landroidx/compose/ui/Modifier;
+	public static final fun animatedItemSwipeOut-d8LSEHM (Landroidx/compose/ui/Modifier;Lcom/rend1x/composeanimatedlist/AnimatedItemScope;FZ)Landroidx/compose/ui/Modifier;
+	public static synthetic fun animatedItemSwipeOut-d8LSEHM$default (Landroidx/compose/ui/Modifier;Lcom/rend1x/composeanimatedlist/AnimatedItemScope;FZILjava/lang/Object;)Landroidx/compose/ui/Modifier;
 }
 
 public abstract interface class com/rend1x/composeanimatedlist/AnimatedItemScope {
