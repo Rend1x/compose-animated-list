@@ -43,7 +43,8 @@ class DoubleAnimatedItemDetector :
             option = RegexOption.DOT_MATCHES_ALL,
         )
         private val EXPLICIT_NON_NONE_REGEX = Regex(
-            """Animated(?:Column|Row)\s*\([\s\S]*transitionSpec\s*=\s*(?![^\n,)]*\.?none\s*\()[\s\S]*?${SHELL_OWNED_HELPER_REGEX.pattern}""",
+            "Animated(?:Column|Row)\\s*\\([\\s\\S]*transitionSpec\\s*=\\s*" +
+                "(?![^\\n,)]*\\.?none\\s*\\()[\\s\\S]*?${SHELL_OWNED_HELPER_REGEX.pattern}",
         )
 
         val ISSUE: Issue = Issue.create(
@@ -138,10 +139,9 @@ class DoubleAnimatedItemDetector :
         return result
     }
 
-    private fun UCallExpression.isAnimatedItemCandidate(): Boolean =
-        methodName in SHELL_OWNED_HELPERS ||
-            resolve()?.name in SHELL_OWNED_HELPERS ||
-            SHELL_OWNED_HELPER_REGEX.containsMatchIn(asSourceString())
+    private fun UCallExpression.isAnimatedItemCandidate(): Boolean = methodName in SHELL_OWNED_HELPERS ||
+        resolve()?.name in SHELL_OWNED_HELPERS ||
+        SHELL_OWNED_HELPER_REGEX.containsMatchIn(asSourceString())
 
     private fun UCallExpression.isAnimatedItemCall(): Boolean {
         val owner = resolve()?.containingClass?.qualifiedName

@@ -113,21 +113,20 @@ fun Modifier.animatedItemScale(
  * @param scope Receiver scope from the [AnimatedColumn] or [AnimatedRow] item lambda (`this`).
  * @param horizontal Collapse width instead of height.
  */
-fun Modifier.animatedItemCollapse(scope: AnimatedItemScope, horizontal: Boolean = false): Modifier =
-    layout { measurable, constraints ->
-        val placeable = measurable.measure(constraints)
-        val size = animatedItemCollapseSize(
-            width = placeable.width,
-            height = placeable.height,
-            progress = scope.placementProgress,
-            horizontal = horizontal,
-        )
-        layout(size.width, size.height) {
-            placeable.placeRelative(0, 0)
-        }
-    }.graphicsLayer {
-        clip = true
+fun Modifier.animatedItemCollapse(scope: AnimatedItemScope, horizontal: Boolean = false): Modifier = layout { measurable, constraints ->
+    val placeable = measurable.measure(constraints)
+    val size = animatedItemCollapseSize(
+        width = placeable.width,
+        height = placeable.height,
+        progress = scope.placementProgress,
+        horizontal = horizontal,
+    )
+    layout(size.width, size.height) {
+        placeable.placeRelative(0, 0)
     }
+}.graphicsLayer {
+    clip = true
+}
 
 /**
  * Material-style shared-axis Y helper driven by [AnimatedItemScope.visibilityProgress] and [AnimatedItemScope.phase].
@@ -140,11 +139,7 @@ fun Modifier.animatedItemCollapse(scope: AnimatedItemScope, horizontal: Boolean 
  * @param distance Y travel at fully hidden visibility (`visibilityProgress == 0`).
  * @param forward Direction pair for enter/exit motion.
  */
-fun Modifier.animatedItemSharedAxisY(
-    scope: AnimatedItemScope,
-    distance: Dp = 30.dp,
-    forward: Boolean = true,
-): Modifier = composed(
+fun Modifier.animatedItemSharedAxisY(scope: AnimatedItemScope, distance: Dp = 30.dp, forward: Boolean = true): Modifier = composed(
     inspectorInfo = debugInspectorInfo {
         name = "animatedItemSharedAxisY"
         properties["scope"] = scope
@@ -176,11 +171,7 @@ fun Modifier.animatedItemSharedAxisY(
  * @param offset X travel at fully hidden visibility (`visibilityProgress == 0`). Use a negative value to swipe left.
  * @param fade Whether exiting items should fade with [AnimatedItemScope.visibilityProgress].
  */
-fun Modifier.animatedItemSwipeOut(
-    scope: AnimatedItemScope,
-    offset: Dp = 96.dp,
-    fade: Boolean = true,
-): Modifier = composed(
+fun Modifier.animatedItemSwipeOut(scope: AnimatedItemScope, offset: Dp = 96.dp, fade: Boolean = true): Modifier = composed(
     inspectorInfo = debugInspectorInfo {
         name = "animatedItemSwipeOut"
         properties["scope"] = scope
@@ -201,16 +192,9 @@ fun Modifier.animatedItemSwipeOut(
     }
 }
 
-internal data class AnimatedItemLayerValues(
-    val alpha: Float,
-    val translationX: Float = 0f,
-    val translationY: Float = 0f,
-)
+internal data class AnimatedItemLayerValues(val alpha: Float, val translationX: Float = 0f, val translationY: Float = 0f)
 
-internal data class AnimatedItemCollapseSize(
-    val width: Int,
-    val height: Int,
-)
+internal data class AnimatedItemCollapseSize(val width: Int, val height: Int)
 
 internal fun animatedItemFadeSlideValues(progress: Float, slideRevealPx: Float): AnimatedItemLayerValues {
     val p = progress.coerceIn(0f, 1f)
@@ -225,12 +209,7 @@ internal fun animatedItemScaleValue(progress: Float, minScale: Float, maxScale: 
     return minScale + (maxScale - minScale) * p
 }
 
-internal fun animatedItemCollapseSize(
-    width: Int,
-    height: Int,
-    progress: Float,
-    horizontal: Boolean,
-): AnimatedItemCollapseSize {
+internal fun animatedItemCollapseSize(width: Int, height: Int, progress: Float, horizontal: Boolean): AnimatedItemCollapseSize {
     val p = progress.coerceIn(0f, 1f)
     return if (horizontal) {
         AnimatedItemCollapseSize(width = (width * p).roundToInt(), height = height)
@@ -257,12 +236,7 @@ internal fun animatedItemSharedAxisYValues(
     )
 }
 
-internal fun animatedItemSwipeOutValues(
-    progress: Float,
-    phase: ItemPhase,
-    offsetPx: Float,
-    fade: Boolean,
-): AnimatedItemLayerValues {
+internal fun animatedItemSwipeOutValues(progress: Float, phase: ItemPhase, offsetPx: Float, fade: Boolean): AnimatedItemLayerValues {
     val p = progress.coerceIn(0f, 1f)
     val exiting = phase == ItemPhase.Exiting
     return AnimatedItemLayerValues(
