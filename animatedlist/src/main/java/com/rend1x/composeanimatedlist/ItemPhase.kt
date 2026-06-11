@@ -1,5 +1,7 @@
 package com.rend1x.composeanimatedlist
 
+import com.rend1x.composeanimatedlist.core.PresenceState
+
 /**
  * **Primary public lifecycle state** for one row in [AnimatedColumn].
  *
@@ -37,4 +39,10 @@ enum class ItemPhase {
      * the list is cleared; exit transition may still run.
      */
     Exiting,
+}
+
+internal fun PresenceState.toItemPhase(): ItemPhase = when (this) {
+    PresenceState.Entering -> ItemPhase.Entering
+    PresenceState.Present -> ItemPhase.Visible
+    PresenceState.Exiting -> ItemPhase.Exiting
 }

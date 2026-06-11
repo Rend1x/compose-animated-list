@@ -217,11 +217,15 @@ public final class com/rend1x/composeanimatedlist/animation/VerticalDirection : 
 
 public final class com/rend1x/composeanimatedlist/state/AnimatedListState {
 	public static final field $stable I
+	public final fun clearExiting (Ljava/lang/Object;)V
 	public final fun clearExitingNow ()V
+	public final fun getExitingKeys ()Ljava/util/Set;
+	public final fun getVisibleKeys ()Ljava/util/Set;
 	public final fun isAnimating ()Z
 }
 
 public final class com/rend1x/composeanimatedlist/state/AnimatedListStateKt {
 	public static final fun rememberAnimatedListState (Landroidx/compose/runtime/Composer;I)Lcom/rend1x/composeanimatedlist/state/AnimatedListState;
+	public static final fun rememberAnimatedListState (Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;Landroidx/compose/runtime/Composer;II)Lcom/rend1x/composeanimatedlist/state/AnimatedListState;
 }
 

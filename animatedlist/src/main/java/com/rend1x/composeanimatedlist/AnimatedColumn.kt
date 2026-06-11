@@ -151,14 +151,38 @@ internal fun <T> AnimatedListLayout(
         .map { it.key }
         .toSet()
 
-    LaunchedEffect(items, key) {
-        renderState.update(items = items, keySelector = key)
+    LaunchedEffect(renderState, state) {
+        state.syncRenderItems(renderState.renderItems)
     }
 
-    LaunchedEffect(exitingKeys) {
-        state.setClearExitingCallback {
-            renderState.clearExitingNow()
-        }
+    LaunchedEffect(items, key) {
+        renderState.update(items = items, keySelector = key)
+        state.syncRenderItems(renderState.renderItems)
+    }
+
+    LaunchedEffect(renderState, state, exitingKeys) {
+        state.setClearExitingCallbacks(
+            callback = {
+                renderState.clearExitingNow()
+                state.syncRenderItems(renderState.renderItems)
+            },
+            keyCallback = { key ->
+                renderState.clearExiting(key)
+                state.syncRenderItems(renderState.renderItems)
+            },
+        )
+    }
+
+    fun onEnterFinished(key: Any) {
+        renderState.onEnterAnimationFinished(key)
+        state.syncRenderItems(renderState.renderItems)
+        state.notifyEnterFinished(key)
+    }
+
+    fun onExitFinished(key: Any) {
+        renderState.onExitAnimationFinished(key)
+        state.syncRenderItems(renderState.renderItems)
+        state.notifyExitFinished(key)
     }
 
     when (orientation) {
@@ -175,8 +199,8 @@ internal fun <T> AnimatedListLayout(
                             listState = state,
                             transitionSpec = transitionSpec,
                             orientation = orientation,
-                            onEnterFinished = { renderState.onEnterAnimationFinished(renderItem.key) },
-                            onExitFinished = { renderState.onExitAnimationFinished(renderItem.key) },
+                            onEnterFinished = { onEnterFinished(renderItem.key) },
+                            onExitFinished = { onExitFinished(renderItem.key) },
                             content = content,
                         )
                     }
@@ -197,8 +221,8 @@ internal fun <T> AnimatedListLayout(
                             listState = state,
                             transitionSpec = transitionSpec,
                             orientation = orientation,
-                            onEnterFinished = { renderState.onEnterAnimationFinished(renderItem.key) },
-                            onExitFinished = { renderState.onExitAnimationFinished(renderItem.key) },
+                            onEnterFinished = { onEnterFinished(renderItem.key) },
+                            onExitFinished = { onExitFinished(renderItem.key) },
                             content = content,
                         )
                     }
@@ -516,12 +540,6 @@ private suspend fun snapShellToExitRest(
     alpha.snapTo(exit.targetAlpha)
     translation.snapTo(with(density) { exit.targetOffsetDp.toPx() })
     mainAxisSizeProgress.snapTo(0f)
-}
-
-private fun PresenceState.toItemPhase(): ItemPhase = when (this) {
-    PresenceState.Entering -> ItemPhase.Entering
-    PresenceState.Present -> ItemPhase.Visible
-    PresenceState.Exiting -> ItemPhase.Exiting
 }
 
 internal data class ItemLifecycleProgress(val visibilityProgress: Float, val placementProgress: Float)

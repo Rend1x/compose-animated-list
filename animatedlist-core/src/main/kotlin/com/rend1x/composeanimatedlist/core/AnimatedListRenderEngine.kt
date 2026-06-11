@@ -10,6 +10,23 @@ class AnimatedListRenderEngine<T>(initialItems: List<T>, keySelector: (T) -> Any
         private set
 
     /**
+     * Keys currently visible to the logical input list. Includes rows that are entering or already
+     * present, and excludes retained rows that are exiting.
+     */
+    val visibleKeys: Set<Any>
+        get() = items
+            .asSequence()
+            .filterNot { it.presence == PresenceState.Exiting }
+            .mapTo(linkedSetOf()) { it.key }
+
+    /** Keys retained only for their exit animation. */
+    val exitingKeys: Set<Any>
+        get() = items
+            .asSequence()
+            .filter { it.presence == PresenceState.Exiting }
+            .mapTo(linkedSetOf()) { it.key }
+
+    /**
      * Applies one logical update: diffs the previous render snapshot against [items] using
      * [keySelector] and the [AnimatedListKeyPolicy] from construction. Full rules (idempotence,
      * insertion/removal, reinsert, key policy, ordering) are documented on [AnimatedListDiffer.diff].
@@ -44,6 +61,13 @@ class AnimatedListRenderEngine<T>(initialItems: List<T>, keySelector: (T) -> Any
 
     fun clearExitingNow() {
         items = items.filterNot { it.presence == PresenceState.Exiting }
+    }
+
+    fun clearExiting(key: Any) {
+        items =
+            items.filterNot { item ->
+                item.key == key && item.presence == PresenceState.Exiting
+            }
     }
 
     private fun buildInitial(initialItems: List<T>, keySelector: (T) -> Any): List<AnimatedListItem<T>> {
