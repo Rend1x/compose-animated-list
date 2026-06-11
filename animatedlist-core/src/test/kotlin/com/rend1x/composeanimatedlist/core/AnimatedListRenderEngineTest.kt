@@ -37,6 +37,38 @@ class AnimatedListRenderEngineTest {
     }
 
     @Test
+    fun clearExiting_dropsOnlyMatchingExitingRow() {
+        val engine =
+            AnimatedListRenderEngine(
+                initialItems = listOf("a", "b", "c"),
+                keySelector = { it },
+                keyPolicy = AnimatedListKeyPolicy.Strict,
+            )
+        engine.update(listOf("a"), { it })
+
+        engine.clearExiting("b")
+
+        assertEquals(listOf("a", "c"), engine.items.map { it.value })
+        assertEquals(setOf("a"), engine.visibleKeys)
+        assertEquals(setOf("c"), engine.exitingKeys)
+    }
+
+    @Test
+    fun visibleAndExitingKeys_reflectRenderSnapshot() {
+        val engine =
+            AnimatedListRenderEngine(
+                initialItems = listOf("a", "b"),
+                keySelector = { it },
+                keyPolicy = AnimatedListKeyPolicy.Strict,
+            )
+
+        engine.update(listOf("b", "c"), { it })
+
+        assertEquals(setOf("b", "c"), engine.visibleKeys)
+        assertEquals(setOf("a"), engine.exitingKeys)
+    }
+
+    @Test
     fun onExitAnimationFinished_removesExitingKey() {
         val engine =
             AnimatedListRenderEngine(
