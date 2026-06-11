@@ -167,6 +167,20 @@ Each item’s content lambda receives [`AnimatedItemScope`](animatedlist/src/mai
 
 See [`AnimatedItemScope`](animatedlist/src/main/java/com/rend1x/composeanimatedlist/AnimatedItemScope.kt) KDoc for the authoritative contract.
 
+### Control hooks
+
+Pass callbacks to [`rememberAnimatedListState`](animatedlist/src/main/java/com/rend1x/composeanimatedlist/state/AnimatedListState.kt) to observe lifecycle changes:
+
+```kotlin
+val listState = rememberAnimatedListState(
+    onItemPhaseChanged = { key, phase -> /* update analytics or external state */ },
+    onEnterFinished = { key -> /* enter completed */ },
+    onExitFinished = { key -> /* exit completed */ },
+)
+```
+
+[`AnimatedListState`](animatedlist/src/main/java/com/rend1x/composeanimatedlist/state/AnimatedListState.kt) also exposes `visibleKeys`, `exitingKeys`, `clearExiting(key)`, and `clearExitingNow()` for controlled retention. `visibleKeys` contains **Entering** and **Visible** keys; `exitingKeys` contains keys retained only for exit animation.
+
 ### Column-driven transitions (optional)
 
 If you prefer the list to own enter/exit motion, pass a non-`none` spec (e.g. [`AnimatedItemDefaults.fadeSlide()`](animatedlist/src/main/java/com/rend1x/composeanimatedlist/animation/AnimatedItemTransitionSpec.kt)) and **omit** [`animatedItem`](animatedlist/src/main/java/com/rend1x/composeanimatedlist/AnimatedItemModifier.kt) on the same surface, or use [`phase`](animatedlist/src/main/java/com/rend1x/composeanimatedlist/ItemPhase.kt) / progress only for extra effects.
